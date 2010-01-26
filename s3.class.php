@@ -489,7 +489,7 @@ class AmazonS3 extends CloudFusion
 			if ($qsa)
 			{
 				// Prepare the string to sign
-				$stringToSign = "$verb\n$md5\n$contentType\n$since_epoch\n$acl$hmeta/$bucket$filename";
+				$stringToSign = "$verb\n\n\n$since_epoch\n$acl$hmeta/$bucket$filename";
 			}
 			else
 			{
