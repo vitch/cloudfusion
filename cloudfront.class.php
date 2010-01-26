@@ -84,6 +84,7 @@ class AmazonCloudFront extends CloudFusion
 	{
 		$this->api_version = '2009-12-01';
 		$this->hostname = CDN_DEFAULT_URL;
+
 		$this->base_standard_xml = '<?xml version="1.0" encoding="UTF-8"?><DistributionConfig xmlns="http://cloudfront.amazonaws.com/doc/' . $this->api_version . '/"></DistributionConfig>';
 		$this->base_streaming_xml = '<?xml version="1.0" encoding="UTF-8"?><StreamingDistributionConfig xmlns="http://cloudfront.amazonaws.com/doc/' . $this->api_version . '/"></StreamingDistributionConfig>';
 
@@ -576,6 +577,7 @@ class AmazonCloudFront extends CloudFusion
 	 *
 	 * Examples:
 	 * 	example::cloudfront/create_distribution.phpt:
+	 * 	example::cloudfront/create_distribution3.phpt:
 	 *
 	 * See Also:
 	 * 	AWS Method - http://docs.amazonwebservices.com/AmazonCloudFront/latest/DeveloperGuide/CreateDistribution.html
@@ -691,6 +693,7 @@ class AmazonCloudFront extends CloudFusion
 	 *
 	 * Examples:
 	 * 	example::cloudfront/z_delete_distribution.phpt:
+	 * 	example::cloudfront/z_delete_distribution2.phpt:
 	 *
 	 * See Also:
 	 * 	AWS Method - http://docs.amazonwebservices.com/AmazonCloudFront/latest/DeveloperGuide/DeleteDistribution.html
@@ -727,6 +730,7 @@ class AmazonCloudFront extends CloudFusion
 	 *
 	 * Examples:
 	 * 	example::cloudfront/get_distribution_config.phpt:
+	 * 	example::cloudfront/get_distribution_config2.phpt:
 	 *
 	 * See Also:
 	 * 	AWS Method - http://docs.amazonwebservices.com/AmazonCloudFront/latest/DeveloperGuide/GetConfig.html
@@ -761,6 +765,7 @@ class AmazonCloudFront extends CloudFusion
 	 *
 	 * Examples:
 	 * 	example::cloudfront/set_distribution_config.phpt:
+	 * 	example::cloudfront/set_distribution_config3.phpt:
 	 *
 	 * See Also:
 	 * 	AWS Method - http://docs.amazonwebservices.com/AmazonCloudFront/latest/DeveloperGuide/PutConfig.html
