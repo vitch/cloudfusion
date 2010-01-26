@@ -308,8 +308,8 @@ class AmazonPAS extends CloudFusion
 
 		// Prepare the response.
 		$headers = $request->get_response_header();
-		$headers['x-tarzan-requesturl'] = $request_url;
-		$headers['x-tarzan-stringtosign'] = $stringToSign;
+		$headers['x-cloudfusion-requesturl'] = $request_url;
+		$headers['x-cloudfusion-stringtosign'] = $stringToSign;
 		$data = new $this->response_class($headers, new SimpleXMLElement($request->get_response_body()), $request->get_response_code());
 
 		// Return!

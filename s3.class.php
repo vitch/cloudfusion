@@ -4,7 +4,7 @@
  * 	Amazon Simple Storage Service (http://aws.amazon.com/s3)
  *
  * Version:
- * 	2010.01.10
+ * 	2010.01.26
  *
  * Copyright:
  * 	2006-2010 Ryan Parman, Foleeo, Inc., and contributors.
@@ -412,6 +412,9 @@ class AmazonS3 extends CloudFusion
 
 					foreach ($meta as $k => $v)
 					{
+						// Strip line breaks.
+						$v = str_replace(array("\r", "\n", '%0A'), '', $v);
+
 						$req->add_header('x-amz-meta-' . strtolower($k), $v);
 						$acl .= 'x-amz-meta-' . strtolower($k) . ':' . $v . "\n";
 					}
@@ -471,6 +474,9 @@ class AmazonS3 extends CloudFusion
 
 					foreach ($meta as $k => $v)
 					{
+						// Strip line breaks.
+						$v = str_replace(array("\r", "\n", '%0A'), '', $v);
+
 						$req->add_header('x-amz-meta-' . strtolower($k), $v);
 						$hmeta .= 'x-amz-meta-' . strtolower($k) . ':' . $v . "\n";
 					}
@@ -526,10 +532,10 @@ class AmazonS3 extends CloudFusion
 
 			// Prepare the response.
 			$headers = $req->get_response_header();
-			$headers['x-tarzan-redirects'] = $redirects;
-			$headers['x-tarzan-requesturl'] = $this->request_url;
-			$headers['x-tarzan-stringtosign'] = $stringToSign;
-			$headers['x-tarzan-requestheaders'] = $req->request_headers;
+			$headers['x-cloudfusion-redirects'] = $redirects;
+			$headers['x-cloudfusion-requesturl'] = $this->request_url;
+			$headers['x-cloudfusion-stringtosign'] = $stringToSign;
+			$headers['x-cloudfusion-requestheaders'] = $req->request_headers;
 
 			if (strpos($req->get_response_body(), '<?xml') !== false)
 			{
@@ -1862,7 +1868,7 @@ class AmazonS3 extends CloudFusion
 		// Was the request successful?
 		if ($object->isOK())
 		{
-			$url = $object->header['x-tarzan-requesturl'];
+			$url = $object->header['x-cloudfusion-requesturl'];
 
 			// If we have a virtual host value, use that instead of Amazon's hostname. There are better ways of doing this, but it works for now.
 			if ($this->vhost)
