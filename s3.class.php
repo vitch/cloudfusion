@@ -499,16 +499,7 @@ class AmazonS3 extends CloudFusion
 
 			// Hash the AWS secret key and generate a signature for the request.
 			$signature = $this->util->hex_to_base64(hash_hmac('sha1', $stringToSign, $this->secret_key));
-
-			// Pass the developer key and signature
-			$req->add_header("Authorization", "AWS " . $this->key . ":" . $signature);
-
-			// If we have a "true" value for returnCurlHandle, do that instead of completing the request.
-			if ($returnCurlHandle)
-			{
-				return $req->prep_request();
-			}
-
+			
 			// Are we getting a Query String Auth?
 			if ($qsa)
 			{
@@ -519,6 +510,15 @@ class AmazonS3 extends CloudFusion
 					'expires' => $since_epoch,
 					'signature' => $signature,
 				);
+			}
+			
+			// Pass the developer key and signature
+			$req->add_header("Authorization", "AWS " . $this->key . ":" . $signature);
+
+			// If we have a "true" value for returnCurlHandle, do that instead of completing the request.
+			if ($returnCurlHandle)
+			{
+				return $req->prep_request();
 			}
 
 			// Send!
@@ -1912,7 +1912,7 @@ class AmazonS3 extends CloudFusion
 
 	/**
 	 * Method: get_object_url()
-	 * 	Gets the web-accessible URL for the file (assuming you've set the ACL settings to <S3_ACL_PUBLIC>).
+	 * 	Gets the web-accessible URL for the file or generates a time-limited signed request for a private file.
 	 *
 	 * Access:
 	 * 	public

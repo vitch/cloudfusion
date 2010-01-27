@@ -55,6 +55,24 @@ class AmazonCloudFront extends CloudFusion
 	 * 	The base content to use for generating the DistributionConfig XML.
 	 */
 	var $base_xml;
+	
+	/**
+	 * Property: domain
+	 * 	The CloudFront distribution domain to use.
+	 */
+	var $domain;
+	
+	/**
+	 * Property: key_pair_id
+	 * 	The RSA key pair ID to use.
+	 */
+	var $key_pair_id;
+	
+	/**
+	 * Property: private_key
+	 * 	The RSA private key resource locator.
+	 */
+	var $private_key;
 
 
 	/*%******************************************************************************************%*/
@@ -76,9 +94,9 @@ class AmazonCloudFront extends CloudFusion
 	 */
 	public function __construct($key = null, $secret_key = null)
 	{
-		$this->api_version = '2009-04-02';
+		$this->api_version = '2009-12-01';
 		$this->hostname = CDN_DEFAULT_URL;
-		$this->base_xml = '<?xml version="1.0" encoding="UTF-8"?><DistributionConfig xmlns="http://cloudfront.amazonaws.com/doc/' . $this->api_version . '/"></DistributionConfig>';
+		$this->base_xml = '<?xml version="1.0" encoding="UTF-8"?><%s xmlns="http://cloudfront.amazonaws.com/doc/' . $this->api_version . '/"></%1$s>';
 
 		if (!$key && !defined('AWS_KEY'))
 		{
@@ -122,12 +140,67 @@ class AmazonCloudFront extends CloudFusion
 		$querystring = null;
 
 		if (!$opt) $opt = array();
-
-		// Generate the querystring from $opt, removing a reference to returnCurlHandle.
+		
 		if ($opt)
 		{
-			$query = $opt;
+			// Generating a pre-signed URL
+			if (isset($opt['conditions'])) {
+				//Put this at the top since if we're requesting a URL be generated the rest of this function is not going to be executed
+				$domain = null;
+				$resource = null;
+				$conditions = null;
+				$private_key = null;
+				$return = array();
+				extract($opt);
+				
+				// Get the expiry time
+				$expires = time() + $conditions['DateLessThan'];
+				
+				//reformat the conditions
+				$conditions['DateLessThan'] = array('AWS:EpochTime'=>$expires);
+				if(isset($conditions['DateGreaterThan'])) $conditions['DateGreaterThan'] = array('AWS:EpochTime'=>time() + $conditions['DateGreaterThan']);
+				if(isset($conditions['IpAddress'])) $conditions['IpAddress'] = array('AWS:SourceIp'=>$conditions['IpAddress']);
+				
+				//prepare the resource
+				$full_resource = 'http://' . $domain . $resource;
+				
+				//canned policy
+				if(count($conditions) === 1) 
+				{
+					// Prepare the policy - the str_replace is because json_encode has a bug where it escapes forward slashes
+					$policy = str_replace('\/','/',json_encode(array("Statement"=>array(array('Resource'=>$full_resource,'Condition'=>$conditions)))));
+					$return['expires'] = $expires;
+				} 
+				else 
+				{
+					// Prepare the policy - the str_replace is because json_encode has a bug where it escapes forward slashes - the new line is required for custom policies
+					$policy = str_replace('\/','/',json_encode(array("Statement"=>array(array('Resource'=>$full_resource,'Condition'=>$conditions))))) . "\n";
+					
+					//url-safe the policy
+					$policy_encoded = strtr(base64_encode($policy),'+=/','-_~');
+					$return['policy'] = $policy_encoded;
+				}
 
+				// Sign the policy
+				openssl_sign($policy, $signature, $private_key);				
+				
+				//url-safe the signature
+				$signature = strtr(base64_encode($signature),'+=/','-_~');
+				
+				$return['signature'] = $signature;
+				return $return;
+				
+			}
+			
+			// Generate the querystring from $opt, removing a reference to returnCurlHandle.
+			$query = $opt;
+			
+			//get the action from opt
+			if(isset($query['action']))
+			{
+				unset($query['action']);
+			}
+			
 			if (isset($query['returnCurlHandle']))
 			{
 				unset($query['returnCurlHandle']);
@@ -144,7 +217,7 @@ class AmazonCloudFront extends CloudFusion
 		);
 
 		// Compose the request.
-		$request_url = 'https://' . $this->hostname . '/' . $this->api_version . '/distribution';
+		$request_url = 'https://' . $this->hostname . '/' . $this->api_version . '/' . $opt['action'];
 		$request_url .= ($path) ? $path : '';
 		$request_url .= ($querystring) ? $querystring : '';
 		$request = new $this->request_class($request_url, $this->set_proxy, $helpers);
@@ -175,7 +248,7 @@ class AmazonCloudFront extends CloudFusion
 		{
 			return $request->prep_request();
 		}
-
+		
 		// Send!
 		$request->send_request();
 
@@ -188,7 +261,64 @@ class AmazonCloudFront extends CloudFusion
 		// Return!
 		return $data;
 	}
-
+	
+	/**
+	 * Method: set_domain()
+	 * 	Set the domain to be used for your CloudFront distribution.
+	 *
+	 * Access:
+	 * 	public
+ 	 *
+	 * Parameters:
+	 * 	domain - _string_ (Required) The hostname to use.
+	 *
+	 * Returns:
+	 * 	void
+ 	 *
+	 */
+	public function set_domain($domain)
+	{
+		$this->domain = $domain;
+	}
+	
+	/**
+	 * Method: set_key_pair_id()
+	 * 	Set the key ID of the RSA key pair being used.
+	 *
+	 * Access:
+	 * 	public
+ 	 *
+	 * Parameters:
+	 * 	key_pair_id - _string_ (Required) ID of the RSA key pair being used.
+	 *
+	 * Returns:
+	 * 	void
+ 	 *
+	 */
+	public function set_key_pair_id($key_pair_id)
+	{
+		$this->key_pair_id = $key_pair_id;
+	}
+	
+	/**
+	 * Method: set_private_key()
+	 * 	Set the private key resource locator being used.
+	 *
+	 * Access:
+	 * 	public
+ 	 *
+	 * Parameters:
+	 *	private_key - _string_ (Optional) RSA private key resource identifier used to sign requests. You must use openssl_get_privatekey() or openssl_pkey_get_private() to get the resource identifier. Don't forget to call openssl_free_key() when you're done.
+	 *
+	 * Returns:
+	 * 	void
+ 	 *
+	 */
+	public function set_private_key($private_key)
+	{
+		$this->private_key = $private_key;
+	}
+	
 
 	/*%******************************************************************************************%*/
 	// SET CUSTOM SETTINGS
@@ -227,6 +357,8 @@ class AmazonCloudFront extends CloudFusion
  	 * Keys for the $opt parameter:
 	 * 	CNAME - _string_|_array_ (Optional) A DNS CNAME to use to map to the CloudFront distribution. If setting more than one, use an indexed array. Supports 1-10 CNAMEs.
 	 * 	Comment - _integer_ (Optional) A comment to apply to the distribution. Cannot exceed 128 characters.
+	 *	OriginAccessIdentity - _string_ (Optional) The Origin Access Identity associated with this distribution. Use the Identity ID, not the CanonicalId.
+	 *	TrustedSigners - _array_ (Optional) Array of AWS Account numbers who are trusted signers. You must explicitly add "Self" (exactly as shown) to the array if you want your own account to be a trusted signer.
 	 * 	Enabled - _string_ (Optional) Defaults to true. Use this to set Enabled to false.
 	 *
 	 * Returns:
@@ -243,7 +375,7 @@ class AmazonCloudFront extends CloudFusion
 	public function generate_config_xml($origin, $caller_reference, $opt = null)
 	{
 		// Default, empty XML
-		$xml = simplexml_load_string($this->base_xml);
+		$xml = simplexml_load_string(sprintf($this->base_xml,'DistributionConfig'));
 
 		// Origin
 		if (stripos($origin, '.s3.amazonaws.com') !== false)
@@ -311,6 +443,32 @@ class AmazonCloudFront extends CloudFusion
 				$logging->addChild('Prefix', $opt['Logging']['Prefix']);
 			}
 		}
+		
+		//Origin Access Identity
+		if (isset($opt['OriginAccessIdentity']))
+		{
+			$xml->addChild('OriginAccessIdentity','origin-access-identity/cloudfront/'.$opt['OriginAccessIdentity']);
+		}
+		
+		// Trusted Signers
+		if (isset($opt['TrustedSigners']))
+		{
+			if (is_array($opt['TrustedSigners']))
+			{
+				$trusted_signers = $xml->addChild('TrustedSigners');
+				foreach($opt['TrustedSigners'] as $signer)
+				{
+					if ($signer == 'Self')
+					{
+						$trusted_signers->addChild('Self');
+					} 
+					else
+					{
+						$trusted_signers->addChild('AwsAccountNumber',$signer);
+					}
+				}
+			}
+		}
 
 		return $xml->asXML();
 	}
@@ -330,6 +488,9 @@ class AmazonCloudFront extends CloudFusion
 	 * 	CNAME - _string_|_array_ (Optional) This (these) value(s) will be ADDED to the existing list of CNAME values. To remove a CNAME value, see <remove_cname()>.
 	 * 	Comment - _integer_ (Optional) This value will replace the existing value for 'Comment'. Cannot exceed 128 characters.
 	 * 	Enabled - _string_ (Optional) This value will replace the existing value for 'Enabled'.
+	 *	Logging - _array_ (Optional)
+	 *	OriginAccessIdentity - _string_ (Optional) This value will replace the existing value for 'OriginAccessIdentity'.
+	 *	TrustedSigners - _array_ (Optional) This array will replace the existing array for 'TrustedSigners'.
 	 *
 	 * Returns:
 	 * 	String DistributionConfig XML document.
@@ -355,7 +516,7 @@ class AmazonCloudFront extends CloudFusion
 		}
 
 		// Default, empty XML
-		$update = simplexml_load_string($this->base_xml);
+		$update = simplexml_load_string(sprintf($this->base_xml,'DistributionConfig'));
 
 		// These can't change.
 		$update->addChild('Origin', $xml->Origin);
@@ -429,6 +590,51 @@ class AmazonCloudFront extends CloudFusion
 			$logging = $update->addChild('Logging');
 			$logging->addChild('Bucket',$xml->Logging->Bucket);
 			$logging->addChild('Prefix', $xml->Logging->Prefix);
+		}
+		
+		//Origin Access Identity
+		if (isset($opt['OriginAccessIdentity']))
+		{
+			$update->addChild('OriginAccessIdentity','origin-access-identity/cloudfront/'.$opt['OriginAccessIdentity']);
+		}
+		elseif (isset($xml->OriginAccessIdentity))
+		{
+			$update->addChild('OriginAccessIdentity','origin-access-identity/cloudfront/'.$xml->OriginAccessIdentity);
+		}
+		
+		// Trusted Signers
+		if (isset($opt['TrustedSigners']))
+		{
+			if (is_array($opt['TrustedSigners']))
+			{
+				$trusted_signers = $update->addChild('TrustedSigners');
+				foreach($opt['TrustedSigners'] as $signer)
+				{
+					if ($signer == 'Self')
+					{
+						$trusted_signers->addChild('Self');
+					} 
+					else
+					{
+						$trusted_signers->addChild('AwsAccountNumber',$signer);
+					}
+				}
+			}
+		}
+		elseif (isset($xml->TrustedSigners) && $xml->TrustedSigners->count())
+		{
+			$trusted_signers = $xml->TrustedSigners;
+			foreach($xml->TrustedSigners->children() as $signer)
+			{
+				if ($signer == 'Self')
+				{
+					$trusted_signers->addChild('Self');
+				} 
+				else
+				{
+					$trusted_signers->addChild('AWSAccountNumber',$signer);
+				}		
+			}
 		}
 
 		// Output
@@ -504,7 +710,38 @@ class AmazonCloudFront extends CloudFusion
 
 		return $xml->asXML();
 	}
+	/**
+	 * Method: oai_config_xml()
+	 * 	Used to generate the Origin Access Identity Config XML used in <create_origin_access_identy()>.
+	 *
+	 * Access:
+	 * 	public
+ 	 *
+	 * Parameters:
+	 * 	caller_reference - _string_ (Required) A unique identifier for the request. Must be generated on your own. A time stamp or hash is a good example.
+ 	 * 	comment - _string_ (Optional) A comment about the origin access identity.
+	 *
+	 * Returns:
+	 * 	String CloudFrontOriginAccessIdentityConfig XML document.
+ 	 *
+	 */
+	public function oai_config_xml($caller_reference, $comment = null)
+	{
+		// Default, empty XML
+		$xml = simplexml_load_string(sprintf($this->base_xml,'CloudFrontOriginAccessIdentityConfig'));
 
+		// CallerReference
+		$xml->addChild('CallerReference', $caller_reference);
+
+		// Comment
+		if ($comment !== null)
+		{
+			$xml->addChild('Comment', $comment);
+		}
+
+		return $xml->asXML();
+	}
+	
 
 	/*%******************************************************************************************%*/
 	// DISTRIBUTIONS
@@ -525,6 +762,9 @@ class AmazonCloudFront extends CloudFusion
 	 * 	CNAME - _string_|_array_ (Optional) A DNS CNAME to use to map to the CloudFront distribution. If setting more than one, use an indexed array. Supports 1-10 CNAMEs.
 	 * 	Comment - _integer_ (Optional) A comment to apply to the distribution. Cannot exceed 128 characters.
 	 * 	Enabled - _string_ (Optional) Defaults to true. Use this to set Enabled to false.
+	 *	OriginAccessIdentity - _string_ (Optional) The Origin Access Identity associated with this distribution. Use the Identity ID, not the CanonicalId.
+	 *	TrustedSigners - _array_ (Optional) Array of AWS Account numbers who are trusted signers. You must explicitly add "Self" (exactly as shown) to the array if you want your own account to be a trusted signer.
+	 * 
 	 * 	returnCurlHandle - _boolean_ (Optional) A private toggle that will return the CURL handle for the request rather than actually completing the request. This is useful for MultiCURL requests.
 	 *
 	 * Returns:
@@ -545,6 +785,7 @@ class AmazonCloudFront extends CloudFusion
 			$auth['returnCurlHandle'] = $opt['returnCurlHandle'];
 			unset($opt['returnCurlHandle']);
 		}
+		$auth['action'] = 'distribution';
 
 		$xml = $this->generate_config_xml($origin, $caller_reference, $opt);
 
@@ -579,6 +820,7 @@ class AmazonCloudFront extends CloudFusion
 	 */
 	public function list_distributions($opt = null)
 	{
+		$opt['action'] = 'distribution';
 		return $this->authenticate(HTTP_GET, null, $opt, null, null);
 	}
 
@@ -608,6 +850,7 @@ class AmazonCloudFront extends CloudFusion
 	 */
 	public function get_distribution_info($distribution_id, $opt = null)
 	{
+		$opt['action'] = 'distribution';
 		return $this->authenticate(HTTP_GET, '/' . $distribution_id, $opt, null, null);
 	}
 
@@ -638,7 +881,33 @@ class AmazonCloudFront extends CloudFusion
 	 */
 	public function delete_distribution($distribution_id, $etag = null, $opt = null)
 	{
+		$opt['action'] = 'distribution';
 		return $this->authenticate(HTTP_DELETE, '/' . $distribution_id, $opt, null, $etag);
+	}
+	
+	/**
+	 * Method: create_origin_access_identity()
+	 * 	The response echoes the CloudFrontOriginAccessIdentity element and returns the newly created identity, an existing identity if the caller_reference is the same, or an error if caller_reference is the same but the rest of the content differs. You can have 100 origin access identities.
+	 *
+	 * Access:
+	 * 	public
+ 	 *
+	 * Parameters:
+	 * 	caller_reference - _string_ (Required) A unique identifier for the request. Must be generated on your own. A time stamp or hash is a good example.
+ 	 * 	comment - _string_ (Optional) A comment about the origin access identity.
+ 	 *
+	 * Returns:
+	 * 	<ResponseCore> object
+	 *
+	 */
+	public function create_origin_access_identity($caller_reference, $comment = null)
+	{
+		$auth = array();
+		$auth['action'] = 'origin-access-identity/cloudfront';
+
+		$xml = $this->oai_config_xml($caller_reference, $comment);
+
+		return $this->authenticate(HTTP_POST, null, $auth, $xml, null);
 	}
 
 
@@ -671,6 +940,7 @@ class AmazonCloudFront extends CloudFusion
 	 */
 	public function get_distribution_config($distribution_id, $opt = null)
 	{
+		$opt['action'] = 'distribution';
 		return $this->authenticate(HTTP_GET, '/' . $distribution_id . '/config', $opt, null, null);
 	}
 
@@ -702,6 +972,49 @@ class AmazonCloudFront extends CloudFusion
 	 */
 	public function set_distribution_config($distribution_id, $xml, $etag, $opt = null)
 	{
+		$opt['action'] = 'distribution';
 		return $this->authenticate(HTTP_PUT, '/' . $distribution_id . '/config', $opt, $xml, $etag);
+	}
+	/*%******************************************************************************************%*/
+	// URLS
+	
+	/**
+	 * Method: get_private_object_url()
+	 * 	Generates a time-limited and/or query signed request for a private file with additional optional restrictions.
+	 *
+	 * Access:
+	 * 	public
+ 	 *
+	 * Parameters:
+	 *	filename - _string_ (Required) The filename of the object. Query parameters can be included.
+	 *	conditions - _array_ (Required) Associative array of conditions to restrict access. Canned/custom policies are done for you depending on what you specify.
+	 * 
+	 * Keys for the $conditions parameter:
+	 *	DateLessThan - _int_ (Required) Time in seconds until the URL expires.
+	 *	DateGreaterThan - _int_ (Optional) Time in seconds until the URL becomes valid.
+	 *	IpAddress - _string_ (Optional) IP address to restrict the access to.
+	 *
+	 * Returns:
+	 * 	_string_ The file URL with authentication parameters.
+	 *
+	 * Examples:
+	 * 	example::cloudfront/get_private_object_url.phpt:
+	 *
+	 * See Also:
+	 * 	Serving Private Content - http://docs.amazonwebservices.com/AmazonCloudFront/latest/DeveloperGuide/PrivateContent.html
+	 */
+	public function get_private_object_url($filename, $conditions)
+	{
+		// Add this to our request
+		$opt = array();
+		$opt['domain'] = $this->domain;
+		$opt['resource'] = "/$filename";
+		$opt['conditions'] = $conditions;
+		$opt['private_key'] = $this->private_key;
+		
+		// Authenticate to S3
+		$data = $this->authenticate(HTTP_GET,null,$opt);
+
+		return 'http://' . $opt['domain'] . $opt['resource'] . ((strpos($opt['resource'],'?')===false)? '?' : '&') . ((isset($data['policy'])) ? 'Policy=' . $data['policy'] : 'Expires=' . $data['expires']) . '&Signature=' . $data['signature'] . '&Key-Pair-Id=' . $this->key_pair_id;
 	}
 }
