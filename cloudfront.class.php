@@ -168,13 +168,13 @@ class AmazonCloudFront extends CloudFusion
 				if(count($conditions) === 1) 
 				{
 					// Prepare the policy - the str_replace is because json_encode has a bug where it escapes forward slashes
-					$policy = str_replace('\/','/',json_encode(array("Statement"=>array(array('Resource'=>$full_resource,'Condition'=>$conditions)))));
+					$policy = $this->util->json_encode(array("Statement"=>array(array('Resource'=>$full_resource,'Condition'=>$conditions))));
 					$return['expires'] = $expires;
 				} 
 				else 
 				{
 					// Prepare the policy - the str_replace is because json_encode has a bug where it escapes forward slashes - the new line is required for custom policies
-					$policy = str_replace('\/','/',json_encode(array("Statement"=>array(array('Resource'=>$full_resource,'Condition'=>$conditions))))) . "\n";
+					$policy = $this->util->json_encode(array("Statement"=>array(array('Resource'=>$full_resource,'Condition'=>$conditions)))) . "\n";
 					
 					//url-safe the policy
 					$policy_encoded = strtr(base64_encode($policy),'+=/','-_~');

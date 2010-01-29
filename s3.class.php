@@ -2084,4 +2084,72 @@ class AmazonS3 extends CloudFusion
 			'display_name' => (string) $id->body->Owner->DisplayName
 		);
 	}
+	
+	/**
+	 * Method: authorize_upload()
+	 * 	Authorizes a browser based upload.
+	 *
+	 * Access:
+	 * 	public
+ 	 *
+	 * Parameters:
+	 *	conditions - _array_ (Required) Associative array of policy conditions. Conditions must match those sent from the form.
+	 *	expires - _int_ (Optional) Time in seconds until the policy expires. Defaults to 1 hour.
+	 *
+	 * Keys for the $opt parameter:
+	 * 	bucket - _string_ (Required) Bucket to authorize the upload to.
+	 *	key - _string_ (Required) Either this, or a starts-with for key must be specified.
+	 *	acl - _string_ (Optional) Values: private, public-read, public-read-write, authenticated-read, bucket-owner-read, bucket-owner-full-control
+	 *	success_action_redirect - _string_ (Optional) URL to redirect to on successful upload. Alias is "redirect".
+	 *	Content-Type - _string_ (Optional) Content typpe of the file.
+	 *	Cache-Control - _string_ (Optional)
+	 *	Content-Disposition - _string_ (Optional)
+	 *	Content-Encoding - _string_ (Optional)
+	 *	Expires - _string_ (Optional)
+	 *	x-amz-meta-... - _string_ (Optional) User metadata.
+	 * 	starts-with - _array_ (Optional) Array of associative arrays of any of the above keys and the prefix value to match. Ex. array(array('$key',$prefix),array('$Content-Type','')).
+	 *	success_action_status - _int_ (Optional) Status code to return if success_action_redirect is not specified.
+	 *	x-amz-security-token - _string_ (Optional) Amazon DevPay security token. Must contain product and user token seperated by a comma in the string.
+	 *	content-length-range - _array_ (Optional) Content range to be uploaded. Useful for setting the minimum and maximum file size. Ex. array(min,max).
+	 *
+	 * Returns:
+ 	 * 	_array_ Base64 encoded policy and signature strings.
+	 * 
+	 * See Also
+	 *	Browser-Based Uploads - http://docs.amazonwebservices.com/AmazonS3/latest/UsingHTTPPOST.html
+	 */
+	public function authorize_upload($conditions, $expires=3600)
+	{
+		if (isset($conditions['starts-with']))
+		{
+			foreach($conditions['starts-with'] as $prefix) {
+				$conditions_array[] = array('starts-with',$prefix[0],$prefix[1]);
+			}
+			unset($conditions['starts-with']);
+		}
+		
+		if (isset($conditions['content-length-range'])) {
+			$conditions_array[] = array('content-length-range',$conditions['content-length-range'][0],$conditions['content-length-range'][1]);
+			unset($conditions['content-length-range']);
+		}
+		
+		foreach (array_keys($conditions) as $condition)
+		{
+			$conditions_array[] = array($condition=>$conditions[$condition]);
+		}
+
+		$policy = array('expiration'=>gmdate(DATE_FORMAT_ISO8601, time()+$expires),'conditions'=>$conditions_array);
+		$policyToSign = $this->util->json_encode($policy);
+		
+		//base64 encode the policy
+		$policy_encoded = base64_encode($policyToSign); 
+		
+		// Hash the AWS secret key and generate a signature for the request.
+		$signature = base64_encode(hash_hmac('sha1', $policy_encoded, $this->secret_key, true));
+		
+		return array(
+			$policy_encoded,
+			$signature
+		);
+	}
 }

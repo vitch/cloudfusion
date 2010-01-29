@@ -341,7 +341,8 @@ class CFUtilities
 	{
 		if (function_exists('json_encode'))
 		{
-			return json_encode($obj);
+			//str_replace is for a json_encode bug where it escapes forward slashes
+			return str_replace('\/','/',json_encode($obj));
 		}
 
 		return $this->json_encode_php51($obj);
