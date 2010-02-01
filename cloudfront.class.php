@@ -147,7 +147,7 @@ class AmazonCloudFront extends CloudFusion
 			if (isset($opt['conditions'])) {
 				//Put this at the top since if we're requesting a URL be generated the rest of this function is not going to be executed
 				$domain = null;
-				$resource = null;
+				$filename = null;
 				$conditions = null;
 				$private_key = null;
 				$return = array();
@@ -162,19 +162,19 @@ class AmazonCloudFront extends CloudFusion
 				if(isset($conditions['IpAddress'])) $conditions['IpAddress'] = array('AWS:SourceIp'=>$conditions['IpAddress']);
 				
 				//prepare the resource
-				$full_resource = 'http://' . $domain . $resource;
+				$resource = 'http://' . $domain . '/' . str_replace(' ','%20',$filename);
 				
 				//canned policy
 				if(count($conditions) === 1) 
 				{
 					// Prepare the policy - the str_replace is because json_encode has a bug where it escapes forward slashes
-					$policy = $this->util->json_encode(array("Statement"=>array(array('Resource'=>$full_resource,'Condition'=>$conditions))));
+					$policy = $this->util->json_encode(array("Statement"=>array(array('Resource'=>$resource,'Condition'=>$conditions))));
 					$return['expires'] = $expires;
 				} 
 				else 
-				{
+				{			
 					// Prepare the policy - the str_replace is because json_encode has a bug where it escapes forward slashes - the new line is required for custom policies
-					$policy = $this->util->json_encode(array("Statement"=>array(array('Resource'=>$full_resource,'Condition'=>$conditions)))) . "\n";
+					$policy = $this->util->json_encode(array("Statement"=>array(array('Resource'=>$resource,'Condition'=>$conditions)))) . "\n";
 					
 					//url-safe the policy
 					$policy_encoded = strtr(base64_encode($policy),'+=/','-_~');
@@ -187,6 +187,7 @@ class AmazonCloudFront extends CloudFusion
 				//url-safe the signature
 				$signature = strtr(base64_encode($signature),'+=/','-_~');
 				
+				$return['resource'] = $resource;
 				$return['signature'] = $signature;
 				return $return;
 				
@@ -1008,13 +1009,13 @@ class AmazonCloudFront extends CloudFusion
 		// Add this to our request
 		$opt = array();
 		$opt['domain'] = $this->domain;
-		$opt['resource'] = "/$filename";
+		$opt['filename'] = $filename;
 		$opt['conditions'] = $conditions;
 		$opt['private_key'] = $this->private_key;
 		
 		// Authenticate to S3
 		$data = $this->authenticate(HTTP_GET,null,$opt);
 
-		return 'http://' . $opt['domain'] . $opt['resource'] . ((strpos($opt['resource'],'?')===false)? '?' : '&') . ((isset($data['policy'])) ? 'Policy=' . $data['policy'] : 'Expires=' . $data['expires']) . '&Signature=' . $data['signature'] . '&Key-Pair-Id=' . $this->key_pair_id;
+		return $data['resource'] . ((strpos($opt['filename'],'?')===false)? '?' : '&') . ((isset($data['policy'])) ? 'Policy=' . $data['policy'] : 'Expires=' . $data['expires']) . '&Signature=' . $data['signature'] . '&Key-Pair-Id=' . $this->key_pair_id;
 	}
 }
