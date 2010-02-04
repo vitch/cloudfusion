@@ -7,7 +7,7 @@
  * 	2009.09.04
  *
  * Copyright:
- * 	2006-2009 Foleeo, Inc., and contributors.
+ * 	2006-2010 Ryan Parman, Foleeo, Inc., and contributors.
  *
  * License:
  * 	Simplified BSD License - http://opensource.org/licenses/bsd-license.php
@@ -308,8 +308,8 @@ class AmazonPAS extends CloudFusion
 
 		// Prepare the response.
 		$headers = $request->get_response_header();
-		$headers['x-tarzan-requesturl'] = $request_url;
-		$headers['x-tarzan-stringtosign'] = $stringToSign;
+		$headers['x-cloudfusion-requesturl'] = $request_url;
+		$headers['x-cloudfusion-stringtosign'] = $stringToSign;
 		$data = new $this->response_class($headers, new SimpleXMLElement($request->get_response_body()), $request->get_response_code());
 
 		// Return!

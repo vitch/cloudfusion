@@ -3,3 +3,9 @@ config-rp.inc.php
 config-ws.inc.php
 config.inc.php
 *sandbox*
+*_cache*
+*.cache
+*.diff
+*.log
+*.out
+*.exp

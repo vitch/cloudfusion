@@ -4,10 +4,10 @@
  * 	Amazon CloudFront CDN Service (http://aws.amazon.com/cloudfront)
  *
  * Version:
- * 	2009.10.11
+ * 	2010.01.25
  *
  * Copyright:
- * 	2006-2009 Foleeo, Inc., and contributors.
+ * 	2006-2010 Ryan Parman, Foleeo, Inc., and contributors.
  *
  * License:
  * 	Simplified BSD License - http://opensource.org/licenses/bsd-license.php
@@ -51,7 +51,7 @@ class CloudFront_Exception extends Exception {}
 class AmazonCloudFront extends CloudFusion
 {
 	/**
-	 * Property: base_xml
+	 * Property: base_standard_xml
 	 * 	The base content to use for generating the DistributionConfig XML.
 	 */
 	var $base_xml;
@@ -96,6 +96,7 @@ class AmazonCloudFront extends CloudFusion
 	{
 		$this->api_version = '2009-12-01';
 		$this->hostname = CDN_DEFAULT_URL;
+
 		$this->base_xml = '<?xml version="1.0" encoding="UTF-8"?><%s xmlns="http://cloudfront.amazonaws.com/doc/' . $this->api_version . '/"></%1$s>';
 
 		if (!$key && !defined('AWS_KEY'))
@@ -207,7 +208,10 @@ class AmazonCloudFront extends CloudFusion
 				unset($query['returnCurlHandle']);
 			}
 
-			$querystring = '?' . $this->util->to_query_string($query);
+			if (count($query) > 0)
+			{
+				$querystring = '?' . $this->util->to_query_string($query);
+			}
 		}
 
 		// Gather information to pass along to other classes.
@@ -219,6 +223,7 @@ class AmazonCloudFront extends CloudFusion
 
 		// Compose the request.
 		$request_url = 'https://' . $this->hostname . '/' . $this->api_version . '/' . $opt['action'];
+
 		$request_url .= ($path) ? $path : '';
 		$request_url .= ($querystring) ? $querystring : '';
 		$request = new $this->request_class($request_url, $this->set_proxy, $helpers);
@@ -361,6 +366,7 @@ class AmazonCloudFront extends CloudFusion
 	 *	OriginAccessIdentity - _string_ (Optional) The Origin Access Identity associated with this distribution. Use the Identity ID, not the CanonicalId.
 	 *	TrustedSigners - _array_ (Optional) Array of AWS Account numbers who are trusted signers. You must explicitly add "Self" (exactly as shown) to the array if you want your own account to be a trusted signer.
 	 * 	Enabled - _string_ (Optional) Defaults to true. Use this to set Enabled to false.
+	 * 	Streaming - _boolean_ (Optional) Whether this should be for a streaming distribution or not. Defaults to false.
 	 *
 	 * Returns:
 	 * 	String DistributionConfig XML document.
@@ -369,6 +375,8 @@ class AmazonCloudFront extends CloudFusion
 	 * 	example::cloudfront/generate_config_xml3.phpt:
 	 * 	example::cloudfront/generate_config_xml4.phpt:
 	 * 	example::cloudfront/generate_config_xml5.phpt:
+	 * 	example::cloudfront/generate_config_xml9.phpt:
+	 * 	example::cloudfront/generate_config_xml10.phpt:
  	 *
 	 * See Also:
 	 * 	Related - <generate_config_xml()>, <update_config_xml()>, <remove_cname()>
@@ -376,7 +384,14 @@ class AmazonCloudFront extends CloudFusion
 	public function generate_config_xml($origin, $caller_reference, $opt = null)
 	{
 		// Default, empty XML
-		$xml = simplexml_load_string(sprintf($this->base_xml,'DistributionConfig'));
+		if (isset($opt['Streaming']) && $opt['Streaming'] == (bool) true) // Did we ask to stream?
+		{
+			$xml = simplexml_load_string(sprintf($this->base_xml,'StreamingDistributionConfig'));
+		}
+		else
+		{
+			$xml = simplexml_load_string(sprintf($this->base_xml,'DistributionConfig'));
+		}
 
 		// Origin
 		if (stripos($origin, '.s3.amazonaws.com') !== false)
@@ -492,12 +507,14 @@ class AmazonCloudFront extends CloudFusion
 	 *	Logging - _array_ (Optional)
 	 *	OriginAccessIdentity - _string_ (Optional) This value will replace the existing value for 'OriginAccessIdentity'.
 	 *	TrustedSigners - _array_ (Optional) This array will replace the existing array for 'TrustedSigners'.
+	 * 	Streaming - _boolean_ (Optional) Whether this should be for a streaming distribution or not. Defaults to false.
 	 *
 	 * Returns:
 	 * 	String DistributionConfig XML document.
 	 *
 	 * Examples:
 	 * 	example::cloudfront/update_config_xml4.phpt:
+	 * 	example::cloudfront/update_config_xml10.phpt:
 	 *
 	 * See Also:
 	 * 	Related - <generate_config_xml()>, <update_config_xml()>, <remove_cname()>
@@ -517,7 +534,14 @@ class AmazonCloudFront extends CloudFusion
 		}
 
 		// Default, empty XML
-		$update = simplexml_load_string(sprintf($this->base_xml,'DistributionConfig'));
+		if (isset($opt['Streaming']) && $opt['Streaming'] == (bool) true) // Did we ask to stream?
+		{
+			$update = simplexml_load_string(sprintf($this->base_xml,'StreamingDistributionConfig'));
+		}
+		else
+		{
+			$update = simplexml_load_string(sprintf($this->base_xml,'DistributionConfig'));
+		}
 
 		// These can't change.
 		$update->addChild('Origin', $xml->Origin);
@@ -751,6 +775,8 @@ class AmazonCloudFront extends CloudFusion
 	 * Method: create_distribution()
 	 * 	The response echoes the DistributionConfig element and returns other metadata about the distribution. For more information, see Parts of a Basic Distribution. It takes a short time for CloudFront to propagate your new distribution's information throughout the CloudFront system. For more information, see Eventual Consistency. You can have up to 100 distributions in the Amazon CloudFront system.
 	 *
+	 * 	For an Adobe Real-Time Messaging Protocol (RTMP) streaming distribution, set the Streaming option to true.
+	 *
 	 * Access:
 	 * 	public
  	 *
@@ -765,7 +791,7 @@ class AmazonCloudFront extends CloudFusion
 	 * 	Enabled - _string_ (Optional) Defaults to true. Use this to set Enabled to false.
 	 *	OriginAccessIdentity - _string_ (Optional) The Origin Access Identity associated with this distribution. Use the Identity ID, not the CanonicalId.
 	 *	TrustedSigners - _array_ (Optional) Array of AWS Account numbers who are trusted signers. You must explicitly add "Self" (exactly as shown) to the array if you want your own account to be a trusted signer.
-	 * 
+	 * 	Streaming - _boolean_ (Optional) Whether this should be for a streaming distribution or not. Defaults to false.
 	 * 	returnCurlHandle - _boolean_ (Optional) A private toggle that will return the CURL handle for the request rather than actually completing the request. This is useful for MultiCURL requests.
 	 *
 	 * Returns:
@@ -773,6 +799,7 @@ class AmazonCloudFront extends CloudFusion
 	 *
 	 * Examples:
 	 * 	example::cloudfront/create_distribution.phpt:
+	 * 	example::cloudfront/create_distribution3.phpt:
 	 *
 	 * See Also:
 	 * 	AWS Method - http://docs.amazonwebservices.com/AmazonCloudFront/latest/DeveloperGuide/CreateDistribution.html
@@ -786,7 +813,14 @@ class AmazonCloudFront extends CloudFusion
 			$auth['returnCurlHandle'] = $opt['returnCurlHandle'];
 			unset($opt['returnCurlHandle']);
 		}
-		$auth['action'] = 'distribution';
+		
+		if (isset($opt['Streaming']) && $opt['Streaming'] == (bool) true)
+		{
+			$auth['action'] = 'streaming-distribution';
+			unset($opt['Streaming']);
+		} else {
+			$auth['action'] = 'distribution';
+		}
 
 		$xml = $this->generate_config_xml($origin, $caller_reference, $opt);
 
@@ -797,6 +831,8 @@ class AmazonCloudFront extends CloudFusion
 	 * Method: list_distributions()
 	 * 	Gets a list of your distributions. By default, your entire list of distributions is returned in one single page. If the list is long, you can paginate it using the MaxItems and Marker parameters.
 	 *
+	 * 	Standard distributions are listed separately from streaming distributions. For streaming distributions, set the Streaming option to true.
+	 *
 	 * Access:
 	 * 	public
  	 *
@@ -806,6 +842,7 @@ class AmazonCloudFront extends CloudFusion
  	 * Keys for the $opt parameter:
 	 * 	Marker - _string_ (Optional) Use this when paginating results to indicate where in your list of distributions to begin. The results include distributions in the list that occur after the marker. To get the next page of results, set the Marker to the value of the NextMarker from the current page's response (which is also the ID of the last distribution on that page).
 	 * 	MaxItems - _integer_ (Optional) The maximum number of distributions you want in the response body. Maximum of 100.
+	 * 	Streaming - _boolean_ (Optional) Whether this should be for a streaming distribution or not. Defaults to false.
 	 * 	returnCurlHandle - _boolean_ (Optional) A private toggle that will return the CURL handle for the request rather than actually completing the request. This is useful for MultiCURL requests.
 	 *
 	 * Returns:
@@ -814,6 +851,7 @@ class AmazonCloudFront extends CloudFusion
 	 * Examples:
 	 * 	example::cloudfront/list_distributions.phpt:
 	 * 	example::cloudfront/list_distributions2.phpt:
+	 * 	example::cloudfront/list_distributions4.phpt:
 	 *
 	 * See Also:
 	 * 	AWS Method - http://docs.amazonwebservices.com/AmazonCloudFront/latest/DeveloperGuide/ListDistributions.html
@@ -821,13 +859,23 @@ class AmazonCloudFront extends CloudFusion
 	 */
 	public function list_distributions($opt = null)
 	{
-		$opt['action'] = 'distribution';
+		if (isset($opt['Streaming']) && $opt['Streaming'] == (bool) true)
+		{
+			$opt['action'] = 'streaming-distribution';
+			unset($opt['Streaming']);
+		} 
+		else 
+		{
+			$opt['action'] = 'distribution';
+		}
 		return $this->authenticate(HTTP_GET, null, $opt, null, null);
 	}
 
 	/**
 	 * Method: get_distribution_info()
 	 * 	Gets information about a given distribution.
+	 *
+	 * 	Standard distributions are handled separately from streaming distributions. For streaming distributions, set the Streaming option to true.
 	 *
 	 * Access:
 	 * 	public
@@ -837,6 +885,7 @@ class AmazonCloudFront extends CloudFusion
  	 * 	opt - _array_ (Required) Associative array of parameters which can have the following keys:
  	 *
  	 * Keys for the $opt parameter:
+	 * 	Streaming - _boolean_ (Optional) Whether this should be for a streaming distribution or not. Defaults to false.
 	 * 	returnCurlHandle - _boolean_ (Optional) A private toggle that will return the CURL handle for the request rather than actually completing the request. This is useful for MultiCURL requests.
  	 *
 	 * Returns:
@@ -844,6 +893,7 @@ class AmazonCloudFront extends CloudFusion
 	 *
 	 * Examples:
 	 * 	example::cloudfront/get_distribution_info.phpt:
+	 * 	example::cloudfront/get_distribution_info3.phpt:
 	 *
 	 * See Also:
 	 * 	AWS Method - http://docs.amazonwebservices.com/AmazonCloudFront/latest/DeveloperGuide/GetDistribution.html
@@ -851,13 +901,24 @@ class AmazonCloudFront extends CloudFusion
 	 */
 	public function get_distribution_info($distribution_id, $opt = null)
 	{
-		$opt['action'] = 'distribution';
+		if (isset($opt['Streaming']) && $opt['Streaming'] == (bool) true)
+		{
+			$opt['action'] = 'streaming-distribution';
+			unset($opt['Streaming']);
+		} 
+		else 
+		{
+			$opt['action'] = 'distribution';
+		}
+		
 		return $this->authenticate(HTTP_GET, '/' . $distribution_id, $opt, null, null);
 	}
 
 	/**
 	 * Method: delete_distribution()
 	 * 	Deletes a disabled distribution. If you haven't disabled the distribution, Amazon CloudFront returns a DistributionNotDisabled error. Use <set_distribution_config()> to disable a distribution before attempting to delete.
+	 *
+	 * 	For an Adobe Real-Time Messaging Protocol (RTMP) streaming distribution, set the Streaming option to true.
 	 *
 	 * Access:
 	 * 	public
@@ -868,6 +929,7 @@ class AmazonCloudFront extends CloudFusion
  	 * 	opt - _array_ (Optional) Associative array of parameters which can have the following keys:
  	 *
  	 * Keys for the $opt parameter:
+	 * 	Streaming - _boolean_ (Optional) Whether this should be for a streaming distribution or not. Defaults to false.
 	 * 	returnCurlHandle - _boolean_ (Optional) A private toggle that will return the CURL handle for the request rather than actually completing the request. This is useful for MultiCURL requests.
  	 *
 	 * Returns:
@@ -875,6 +937,7 @@ class AmazonCloudFront extends CloudFusion
 	 *
 	 * Examples:
 	 * 	example::cloudfront/z_delete_distribution.phpt:
+	 * 	example::cloudfront/z_delete_distribution2.phpt:
 	 *
 	 * See Also:
 	 * 	AWS Method - http://docs.amazonwebservices.com/AmazonCloudFront/latest/DeveloperGuide/DeleteDistribution.html
@@ -882,7 +945,16 @@ class AmazonCloudFront extends CloudFusion
 	 */
 	public function delete_distribution($distribution_id, $etag = null, $opt = null)
 	{
-		$opt['action'] = 'distribution';
+		if (isset($opt['Streaming']) && $opt['Streaming'] == (bool) true)
+		{
+			$opt['action'] = 'streaming-distribution';
+			unset($opt['Streaming']);
+		} 
+		else 
+		{
+			$opt['action'] = 'distribution';
+		}
+		
 		return $this->authenticate(HTTP_DELETE, '/' . $distribution_id, $opt, null, $etag);
 	}
 	
@@ -919,6 +991,8 @@ class AmazonCloudFront extends CloudFusion
 	 * Method: get_distribution_config()
 	 * 	Gets the current distribution config information for a given distribution ID.
 	 *
+	 * 	Standard distributions are handled separately from streaming distributions. For streaming distributions, set the Streaming option to true.
+	 *
 	 * Access:
 	 * 	public
  	 *
@@ -927,6 +1001,7 @@ class AmazonCloudFront extends CloudFusion
  	 * 	opt - _array_ (Required) Associative array of parameters which can have the following keys:
  	 *
  	 * Keys for the $opt parameter:
+	 * 	Streaming - _boolean_ (Optional) Whether this should be for a streaming distribution or not. Defaults to false.
 	 * 	returnCurlHandle - _boolean_ (Optional) A private toggle that will return the CURL handle for the request rather than actually completing the request. This is useful for MultiCURL requests.
  	 *
 	 * Returns:
@@ -934,6 +1009,7 @@ class AmazonCloudFront extends CloudFusion
 	 *
 	 * Examples:
 	 * 	example::cloudfront/get_distribution_config.phpt:
+	 * 	example::cloudfront/get_distribution_config2.phpt:
 	 *
 	 * See Also:
 	 * 	AWS Method - http://docs.amazonwebservices.com/AmazonCloudFront/latest/DeveloperGuide/GetConfig.html
@@ -941,13 +1017,23 @@ class AmazonCloudFront extends CloudFusion
 	 */
 	public function get_distribution_config($distribution_id, $opt = null)
 	{
-		$opt['action'] = 'distribution';
+		if (isset($opt['Streaming']) && $opt['Streaming'] == (bool) true)
+		{
+			$opt['action'] = 'streaming-distribution';
+			unset($opt['Streaming']);
+		} 
+		else 
+		{
+			$opt['action'] = 'distribution';
+		}
 		return $this->authenticate(HTTP_GET, '/' . $distribution_id . '/config', $opt, null, null);
 	}
 
 	/**
 	 * Method: set_distribution_config()
 	 * 	Sets a new distribution config for a given distribution ID.
+	 *
+	 * 	Standard distributions are handled separately from streaming distributions. For streaming distributions, set the Streaming option to true.
 	 *
 	 * Access:
 	 * 	public
@@ -959,6 +1045,7 @@ class AmazonCloudFront extends CloudFusion
  	 * 	opt - _array_ (Required) Associative array of parameters which can have the following keys:
  	 *
  	 * Keys for the $opt parameter:
+	 * 	Streaming - _boolean_ (Optional) Whether this should be for a streaming distribution or not. Defaults to false.
 	 * 	returnCurlHandle - _boolean_ (Optional) A private toggle that will return the CURL handle for the request rather than actually completing the request. This is useful for MultiCURL requests.
  	 *
 	 * Returns:
@@ -966,6 +1053,7 @@ class AmazonCloudFront extends CloudFusion
 	 *
 	 * Examples:
 	 * 	example::cloudfront/set_distribution_config.phpt:
+	 * 	example::cloudfront/set_distribution_config3.phpt:
 	 *
 	 * See Also:
 	 * 	AWS Method - http://docs.amazonwebservices.com/AmazonCloudFront/latest/DeveloperGuide/PutConfig.html
@@ -973,7 +1061,16 @@ class AmazonCloudFront extends CloudFusion
 	 */
 	public function set_distribution_config($distribution_id, $xml, $etag, $opt = null)
 	{
-		$opt['action'] = 'distribution';
+		if (isset($opt['Streaming']) && $opt['Streaming'] == (bool) true)
+		{
+			$opt['action'] = 'streaming-distribution';
+			unset($opt['Streaming']);
+		} 
+		else 
+		{
+			$opt['action'] = 'distribution';
+		}
+		
 		return $this->authenticate(HTTP_PUT, '/' . $distribution_id . '/config', $opt, $xml, $etag);
 	}
 	/*%******************************************************************************************%*/

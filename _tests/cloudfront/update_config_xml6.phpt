@@ -1,5 +1,5 @@
 --TEST--
-CloudFront: update_config_xml() testing enabled, comments, and single CNAME using a string.
+CloudFront: update_config_xml() testing enabled, comments, single CNAME using a string, adding logging.
 
 --FILE--
 <?php
