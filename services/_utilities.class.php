@@ -4,7 +4,7 @@
  * 	Utilities for connecting to, and working with, AWS.
  *
  * Version:
- * 	2009.08.24
+ * 	2010.02.07
  *
  * Copyright:
  * 	2006-2010 Ryan Parman, Foleeo, Inc., and contributors.
@@ -87,7 +87,9 @@ class CFUtilities
 	 */
 	public function to_query_string($array)
 	{
-		return http_build_query($array);
+		// Explicitly pass a third parameter.
+		// http://php.net/manual/en/function.http-build-query.php#74781
+		return http_build_query($array, '', '&');
 	}
 
 	/**
