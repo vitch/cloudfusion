@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <package version="2.0" xmlns="http://pear.php.net/dtd/package-2.0" xmlns:tasks="http://pear.php.net/dtd/tasks-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pear.php.net/dtd/tasks-1.0 http://pear.php.net/dtd/tasks-1.0.xsd http://pear.php.net/dtd/package-2.0 http://pear.php.net/dtd/package-2.0.xsd">
   <name>cloudfusion</name>
-  <channel>pearhub.org</channel>
+  <channel>localhost</channel>
   <summary>Build awesome, cloud-based web applications in a fraction of the time!</summary>
   <description>Fast, powerful PHP toolkit with an easy to learn, consistent API. Highly extensible framework for easily adding new services. Ridiculously thorough API reference, code samples and tutorials. Works with Amazon Web Services and Eucalyptus.</description>
   <lead>
@@ -36,6 +36,14 @@
       <file baseinstalldir="/" name="services/sdb.class.php" role="php"/>
       <file baseinstalldir="/" name="services/sqs.class.php" role="php"/>
       <file baseinstalldir="/" name="services/sqsqueue.class.php" role="php"/>
+      <file baseinstalldir="/" name="lib/cachecore/cacheapc.class.php" role="php"/>
+      <file baseinstalldir="/" name="lib/cachecore/cachecore.class.php" role="php"/>
+      <file baseinstalldir="/" name="lib/cachecore/cachefile.class.php" role="php"/>
+      <file baseinstalldir="/" name="lib/cachecore/cachemc.class.php" role="php"/>
+      <file baseinstalldir="/" name="lib/cachecore/cachepdo.class.php" role="php"/>
+      <file baseinstalldir="/" name="lib/cachecore/cachexcache.class.php" role="php"/>
+      <file baseinstalldir="/" name="lib/cachecore/icachecore.interface.php" role="php"/>
+      <file baseinstalldir="/" name="lib/requestcore/requestcore.class.php" role="php"/>
     </dir>
   </contents>
   <dependencies>
