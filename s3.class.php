@@ -1214,7 +1214,13 @@ class AmazonS3 extends CloudFusion
 	public function if_object_exists($bucket, $filename)
 	{
 		$header = $this->head_object($bucket, $filename);
-		return $header->isOK();
+		if($header->isOK()) {
+			return true;
+		} elseif($header->status === 404) {
+			return false;
+		} else {
+			return null;
+		}
 	}
 
 	/**
@@ -2059,16 +2065,21 @@ class AmazonS3 extends CloudFusion
 					$grantee->addChild('URI', S3_USERS_LOGGING);
 					break;
 
-				// Assume an Email Address
+				// Email Address or Canonical Id
 				default:
-					$grantee->addAttribute('xsi:type', 'AmazonCustomerByEmail', 'http://www.w3.org/2001/XMLSchema-instance');
-					$grantee->addChild('EmailAddress', $user['id']);
+					if(strpos($user['id'],'@')) {
+						$grantee->addAttribute('xsi:type', 'AmazonCustomerByEmail', 'http://www.w3.org/2001/XMLSchema-instance');
+						$grantee->addChild('EmailAddress', $user['id']);
+					} else {
+						//assume Canonical Id
+						$grantee->addAttribute('xsi:type', 'CanonicalUser', 'http://www.w3.org/2001/XMLSchema-instance');
+						$grantee->addChild('ID', $user['id']);
+					}
 					break;
 			}
 
 			$grant->addChild('Permission', $user['permission']);
 		}
-
 		return $xml->asXML();
 	}
 
