@@ -623,14 +623,14 @@ class AmazonS3 extends CloudFusion
 					break;
 
 				default:
-					$body = '<CreateBucketConfiguration><LocationConstraint>US</LocationConstraint></CreateBucketConfiguration>';
+					$body = '';
 					$contentType = 'application/xml';
 					break;
 			}
 		}
 		else
 		{
-			$body = '<CreateBucketConfiguration><LocationConstraint>US</LocationConstraint></CreateBucketConfiguration>';
+			$body = '';
 			$contentType = 'application/xml';
 		}
 
