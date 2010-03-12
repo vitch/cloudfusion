@@ -153,13 +153,24 @@ class AmazonCloudFront extends CloudFusion
 				$private_key = null;
 				$return = array();
 				extract($opt);
-				
-				// Get the expiry time
-				$expires = time() + $conditions['DateLessThan'];
+
+                                if(isset($conditions['DateLessThanExact'])) {
+                                    $expires = $conditions['DateLessThanExact'];
+                                    unset($conditions['DateLessThanExact']);
+                                }
+                                else {
+                                    // Get the expiry time
+                                    $expires = time() + $conditions['DateLessThan'];
+                                }
 				
 				//reformat the conditions
-				$conditions['DateLessThan'] = array('AWS:EpochTime'=>$expires);
-				if(isset($conditions['DateGreaterThan'])) $conditions['DateGreaterThan'] = array('AWS:EpochTime'=>time() + $conditions['DateGreaterThan']);
+                                $conditions['DateLessThan'] = array('AWS:EpochTime'=>$expires);
+				if(isset($conditions['DateGreaterThan'])) {
+                                    $conditions['DateGreaterThan'] = array('AWS:EpochTime'=>time() + $conditions['DateGreaterThan']);
+                                } elseif(isset($conditions['DateGreaterThanExact'])) {
+                                    $conditions['DateGreaterThan'] = array('AWS:EpochTime'=>$conditions['DateGreaterThanExact']);
+                                    unset($conditions['DateGreaterThanExact']);
+                                }
 				if(isset($conditions['IpAddress'])) $conditions['IpAddress'] = array('AWS:SourceIp'=>$conditions['IpAddress']);
 				
 				//prepare the resource
@@ -1091,6 +1102,8 @@ class AmazonCloudFront extends CloudFusion
 	 *	DateLessThan - _int_ (Required) Time in seconds until the URL expires.
 	 *	DateGreaterThan - _int_ (Optional) Time in seconds until the URL becomes valid.
 	 *	IpAddress - _string_ (Optional) IP address to restrict the access to.
+         *      DateLessThanExact - _int_ (Optional) Exact Unix timestamp of expiry time.
+         *      DateGreaterThanExact - _int_ (Optional) Exact Unix timestamp until URL becomes valid.
 	 *
 	 * Returns:
 	 * 	_string_ The file URL with authentication parameters.
