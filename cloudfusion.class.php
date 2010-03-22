@@ -41,7 +41,7 @@ define('CLOUDFUSION_NAME', 'CloudFusion');
  * Constant: CLOUDFUSION_VERSION
  * Version of the software.
  */
-define('CLOUDFUSION_VERSION', '2.5');
+define('CLOUDFUSION_VERSION', '2.5.1-dev');
 
 /**
  * Constant: CLOUDFUSION_BUILD
@@ -243,11 +243,11 @@ class CloudFusion
 
 		if (strstr($class, 'Amazon'))
 		{
-			$path .= str_ireplace('Amazon', '', strtolower($class)) . '.class.php';
+			$path .= 'services/' . str_ireplace('Amazon', '', strtolower($class)) . '.class.php';
 		}
 		elseif (strstr($class, 'CF'))
 		{
-			$path .= str_ireplace('CF', '_', strtolower($class)) . '.class.php';
+			$path .= 'services/' . str_ireplace('CF', '_', strtolower($class)) . '.class.php';
 		}
 		elseif (strstr($class, 'Cache'))
 		{

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<package version="2.0" xmlns="http://pear.php.net/dtd/package-2.0" xmlns:tasks="http://pear.php.net/dtd/tasks-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pear.php.net/dtd/tasks-1.0 http://pear.php.net/dtd/tasks-1.0.xsd http://pear.php.net/dtd/package-2.0 http://pear.php.net/dtd/package-2.0.xsd">
+  <name>cloudfusion</name>
+  <channel>pear.warpshare.org</channel>
+  <summary>Build awesome, cloud-based web applications in a fraction of the time!</summary>
+  <description>Fast, powerful PHP toolkit with an easy to learn, consistent API. Highly extensible framework for easily adding new services. Ridiculously thorough API reference, code samples and tutorials. Works with Amazon Web Services and Eucalyptus.</description>
+  <lead>
+    <name>Ryan Parman</name>
+    <user>skyzyx</user>
+    <email>ryan@getcloudfusion.com</email>
+    <active>yes</active>
+  </lead>
+  <date>2010-02-09</date>
+  <time>00:00:00</time>
+  <version>
+    <release>2.5.0</release>
+    <api>2.5.0</api>
+  </version>
+  <stability>
+    <release>stable</release>
+    <api>stable</api>
+  </stability>
+  <license uri="http://opensource.org/licenses/bsd-license.php">New BSD</license>
+  <notes>version 2.5.0</notes>
+  <contents>
+    <dir name="/" baseinstalldir="/cloudfusion/">
+      <file baseinstalldir="/" name="README.textile" role="php"/>
+      <file baseinstalldir="/" name="cloudfusion.class.php" role="php"/>
+      <file baseinstalldir="/" name="config-sample.inc.php" role="php"/>
+      <file baseinstalldir="/" name="services/_utilities.class.php" role="php"/>
+      <file baseinstalldir="/" name="services/cloudfront.class.php" role="php"/>
+      <file baseinstalldir="/" name="services/cloudwatch.class.php" role="php"/>
+      <file baseinstalldir="/" name="services/ec2.class.php" role="php"/>
+      <file baseinstalldir="/" name="services/pas.class.php" role="php"/>
+      <file baseinstalldir="/" name="services/s3.class.php" role="php"/>
+      <file baseinstalldir="/" name="services/sdb.class.php" role="php"/>
+      <file baseinstalldir="/" name="services/sqs.class.php" role="php"/>
+      <file baseinstalldir="/" name="services/sqsqueue.class.php" role="php"/>
+      <file baseinstalldir="/" name="lib/cachecore/cacheapc.class.php" role="php"/>
+      <file baseinstalldir="/" name="lib/cachecore/cachecore.class.php" role="php"/>
+      <file baseinstalldir="/" name="lib/cachecore/cachefile.class.php" role="php"/>
+      <file baseinstalldir="/" name="lib/cachecore/cachemc.class.php" role="php"/>
+      <file baseinstalldir="/" name="lib/cachecore/cachepdo.class.php" role="php"/>
+      <file baseinstalldir="/" name="lib/cachecore/cachexcache.class.php" role="php"/>
+      <file baseinstalldir="/" name="lib/cachecore/icachecore.interface.php" role="php"/>
+      <file baseinstalldir="/" name="lib/requestcore/requestcore.class.php" role="php"/>
+    </dir>
+  </contents>
+  <dependencies>
+    <required>
+      <php>
+        <min>5.1.4</min>
+      </php>
+      <pearinstaller>
+        <min>1.4.0</min>
+      </pearinstaller>
+    </required>
+  </dependencies>
+  <phprelease />
+</package>
