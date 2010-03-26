@@ -4,7 +4,7 @@
  * 	Amazon CloudFront CDN Service (http://aws.amazon.com/cloudfront)
  *
  * Version:
- * 	2010.01.25
+ * 	2010.03.26
  *
  * Copyright:
  * 	2006-2010 Ryan Parman, Foleeo, Inc., and contributors.
@@ -55,19 +55,19 @@ class AmazonCloudFront extends CloudFusion
 	 * 	The base content to use for generating the DistributionConfig XML.
 	 */
 	var $base_xml;
-	
+
 	/**
 	 * Property: domain
 	 * 	The CloudFront distribution domain to use.
 	 */
 	var $domain;
-	
+
 	/**
 	 * Property: key_pair_id
 	 * 	The RSA key pair ID to use.
 	 */
 	var $key_pair_id;
-	
+
 	/**
 	 * Property: private_key
 	 * 	The RSA private key resource locator.
@@ -140,13 +140,16 @@ class AmazonCloudFront extends CloudFusion
 	{
 		$querystring = null;
 
-		if (!$opt) $opt = array();
-		
-		if ($opt)
+		if (!$opt)
+		{
+			$opt = array();
+		}
+		else
 		{
 			// Generating a pre-signed URL
-			if (isset($opt['conditions'])) {
-				//Put this at the top since if we're requesting a URL be generated the rest of this function is not going to be executed
+			if (isset($opt['conditions']))
+			{
+				// Put this at the top since if we're requesting a URL be generated the rest of this function is not going to be executed
 				$domain = null;
 				$filename = null;
 				$conditions = null;
@@ -154,66 +157,101 @@ class AmazonCloudFront extends CloudFusion
 				$return = array();
 				extract($opt);
 
-                                if(isset($conditions['DateLessThanExact'])) {
-                                    $expires = $conditions['DateLessThanExact'];
-                                    unset($conditions['DateLessThanExact']);
-                                }
-                                else {
-                                    // Get the expiry time
-                                    $expires = time() + $conditions['DateLessThan'];
-                                }
-				
-				//reformat the conditions
-                                $conditions['DateLessThan'] = array('AWS:EpochTime'=>$expires);
-				if(isset($conditions['DateGreaterThan'])) {
-                                    $conditions['DateGreaterThan'] = array('AWS:EpochTime'=>time() + $conditions['DateGreaterThan']);
-                                } elseif(isset($conditions['DateGreaterThanExact'])) {
-                                    $conditions['DateGreaterThan'] = array('AWS:EpochTime'=>$conditions['DateGreaterThanExact']);
-                                    unset($conditions['DateGreaterThanExact']);
-                                }
-				if(isset($conditions['IpAddress'])) $conditions['IpAddress'] = array('AWS:SourceIp'=>$conditions['IpAddress']);
-				
-				//prepare the resource
-				$resource = 'http://' . $domain . '/' . str_replace(' ','%20',$filename);
-				
-				//canned policy
-				if(count($conditions) === 1) 
+				if (isset($conditions['DateLessThanExact']))
+				{
+					$expires = $conditions['DateLessThanExact'];
+					unset($conditions['DateLessThanExact']);
+				}
+				else
+				{
+					// Get the expiry time
+					$expires = time() + $conditions['DateLessThan'];
+				}
+
+				// Reformat the conditions
+				$conditions['DateLessThan'] = array(
+					'AWS:EpochTime' => $expires
+				);
+
+				if (isset($conditions['DateGreaterThan']))
+				{
+					$conditions['DateGreaterThan'] = array(
+						'AWS:EpochTime' => time() + $conditions['DateGreaterThan']
+					);
+				}
+				elseif (isset($conditions['DateGreaterThanExact']))
+				{
+					$conditions['DateGreaterThan'] = array(
+						'AWS:EpochTime' => $conditions['DateGreaterThanExact']
+					);
+
+					unset($conditions['DateGreaterThanExact']);
+				}
+
+				if (isset($conditions['IpAddress']))
+				{
+					$conditions['IpAddress'] = array(
+						'AWS:SourceIp' => $conditions['IpAddress']
+					);
+				}
+
+				// Prepare the resource
+				$resource = 'http://' . $domain . '/' . str_replace(' ', '%20', $filename);
+
+				// Canned policy
+				if (count($conditions) === 1)
 				{
 					// Prepare the policy - the str_replace is because json_encode has a bug where it escapes forward slashes
-					$policy = $this->util->json_encode(array("Statement"=>array(array('Resource'=>$resource,'Condition'=>$conditions))));
+					$policy = $this->util->json_encode(array(
+						'Statement' => array(
+							array(
+								'Resource' => $resource,
+								'Condition' => $conditions
+							)
+						)
+					));
+
 					$return['expires'] = $expires;
-				} 
-				else 
-				{			
-					// Prepare the policy - the str_replace is because json_encode has a bug where it escapes forward slashes - the new line is required for custom policies
-					$policy = $this->util->json_encode(array("Statement"=>array(array('Resource'=>$resource,'Condition'=>$conditions)))) . "\n";
-					
-					//url-safe the policy
-					$policy_encoded = strtr(base64_encode($policy),'+=/','-_~');
+				}
+				else
+				{
+					// Prepare the policy
+					// The str_replace is because json_encode has a bug where it escapes forward slashes -- the new line is required for custom policies
+					$policy = $this->util->json_encode(array(
+						'Statement' => array(
+							array(
+								'Resource' => $resource,
+								'Condition' => $conditions
+							)
+						)
+					)) . "\n";
+
+					// URL-safe the policy
+					$policy_encoded = strtr(base64_encode($policy), '+=/', '-_~');
 					$return['policy'] = $policy_encoded;
 				}
 
 				// Sign the policy
-				openssl_sign($policy, $signature, $private_key);				
-				
-				//url-safe the signature
-				$signature = strtr(base64_encode($signature),'+=/','-_~');
-				
+				openssl_sign($policy, $signature, $private_key);
+
+				// URL-safe the signature
+				$signature = strtr(base64_encode($signature), '+=/', '-_~');
+
 				$return['resource'] = $resource;
 				$return['signature'] = $signature;
+
 				return $return;
-				
 			}
-			
+
 			// Generate the querystring from $opt, removing a reference to returnCurlHandle.
 			$query = $opt;
-			
-			//get the action from opt
-			if(isset($query['action']))
+
+			// Get the action from $opt
+			if (isset($query['action']))
 			{
 				unset($query['action']);
 			}
-			
+
 			if (isset($query['returnCurlHandle']))
 			{
 				unset($query['returnCurlHandle']);
@@ -265,7 +303,7 @@ class AmazonCloudFront extends CloudFusion
 		{
 			return $request->prep_request();
 		}
-		
+
 		// Send!
 		$request->send_request();
 
@@ -278,7 +316,7 @@ class AmazonCloudFront extends CloudFusion
 		// Return!
 		return $data;
 	}
-	
+
 	/**
 	 * Method: set_domain()
 	 * 	Set the domain to be used for your CloudFront distribution.
@@ -297,9 +335,9 @@ class AmazonCloudFront extends CloudFusion
 	{
 		$this->domain = $domain;
 	}
-	
+
 	/**
-	 * Method: set_key_pair_id()
+	 * Method: set_keypair_id()
 	 * 	Set the key ID of the RSA key pair being used.
 	 *
 	 * Access:
@@ -312,11 +350,11 @@ class AmazonCloudFront extends CloudFusion
 	 * 	void
  	 *
 	 */
-	public function set_key_pair_id($key_pair_id)
+	public function set_keypair_id($key_pair_id)
 	{
 		$this->key_pair_id = $key_pair_id;
 	}
-	
+
 	/**
 	 * Method: set_private_key()
 	 * 	Set the private key resource locator being used.
@@ -335,7 +373,7 @@ class AmazonCloudFront extends CloudFusion
 	{
 		$this->private_key = $private_key;
 	}
-	
+
 
 	/*%******************************************************************************************%*/
 	// SET CUSTOM SETTINGS
@@ -470,13 +508,13 @@ class AmazonCloudFront extends CloudFusion
 				$logging->addChild('Prefix', $opt['Logging']['Prefix']);
 			}
 		}
-		
-		//Origin Access Identity
+
+		// Origin Access Identity
 		if (isset($opt['OriginAccessIdentity']))
 		{
-			$xml->addChild('OriginAccessIdentity','origin-access-identity/cloudfront/'.$opt['OriginAccessIdentity']);
+			$xml->addChild('OriginAccessIdentity', 'origin-access-identity/cloudfront/' . $opt['OriginAccessIdentity']);
 		}
-		
+
 		// Trusted Signers
 		if (isset($opt['TrustedSigners']))
 		{
@@ -485,13 +523,13 @@ class AmazonCloudFront extends CloudFusion
 				$trusted_signers = $xml->addChild('TrustedSigners');
 				foreach($opt['TrustedSigners'] as $signer)
 				{
-					if ($signer == 'Self')
+					if ($signer === 'Self')
 					{
 						$trusted_signers->addChild('Self');
-					} 
+					}
 					else
 					{
-						$trusted_signers->addChild('AwsAccountNumber',$signer);
+						$trusted_signers->addChild('AwsAccountNumber', $signer);
 					}
 				}
 			}
@@ -547,11 +585,11 @@ class AmazonCloudFront extends CloudFusion
 		// Default, empty XML
 		if (isset($opt['Streaming']) && $opt['Streaming'] == (bool) true) // Did we ask to stream?
 		{
-			$update = simplexml_load_string(sprintf($this->base_xml,'StreamingDistributionConfig'));
+			$update = simplexml_load_string(sprintf($this->base_xml, 'StreamingDistributionConfig'));
 		}
 		else
 		{
-			$update = simplexml_load_string(sprintf($this->base_xml,'DistributionConfig'));
+			$update = simplexml_load_string(sprintf($this->base_xml, 'DistributionConfig'));
 		}
 
 		// These can't change.
@@ -627,17 +665,17 @@ class AmazonCloudFront extends CloudFusion
 			$logging->addChild('Bucket',$xml->Logging->Bucket);
 			$logging->addChild('Prefix', $xml->Logging->Prefix);
 		}
-		
-		//Origin Access Identity
+
+		// Origin Access Identity
 		if (isset($opt['OriginAccessIdentity']))
 		{
-			$update->addChild('OriginAccessIdentity','origin-access-identity/cloudfront/'.$opt['OriginAccessIdentity']);
+			$update->addChild('OriginAccessIdentity', 'origin-access-identity/cloudfront/' . $opt['OriginAccessIdentity']);
 		}
 		elseif (isset($xml->OriginAccessIdentity))
 		{
-			$update->addChild('OriginAccessIdentity','origin-access-identity/cloudfront/'.$xml->OriginAccessIdentity);
+			$update->addChild('OriginAccessIdentity', 'origin-access-identity/cloudfront/' . $xml->OriginAccessIdentity);
 		}
-		
+
 		// Trusted Signers
 		if (isset($opt['TrustedSigners']))
 		{
@@ -649,10 +687,10 @@ class AmazonCloudFront extends CloudFusion
 					if ($signer == 'Self')
 					{
 						$trusted_signers->addChild('Self');
-					} 
+					}
 					else
 					{
-						$trusted_signers->addChild('AwsAccountNumber',$signer);
+						$trusted_signers->addChild('AwsAccountNumber', $signer);
 					}
 				}
 			}
@@ -662,14 +700,14 @@ class AmazonCloudFront extends CloudFusion
 			$trusted_signers = $xml->TrustedSigners;
 			foreach($xml->TrustedSigners->children() as $signer)
 			{
-				if ($signer == 'Self')
+				if ($signer === 'Self')
 				{
 					$trusted_signers->addChild('Self');
-				} 
+				}
 				else
 				{
-					$trusted_signers->addChild('AWSAccountNumber',$signer);
-				}		
+					$trusted_signers->addChild('AWSAccountNumber', $signer);
+				}
 			}
 		}
 
@@ -746,6 +784,7 @@ class AmazonCloudFront extends CloudFusion
 
 		return $xml->asXML();
 	}
+
 	/**
 	 * Method: oai_config_xml()
 	 * 	Used to generate the Origin Access Identity Config XML used in <create_origin_access_identy()>.
@@ -764,7 +803,7 @@ class AmazonCloudFront extends CloudFusion
 	public function oai_config_xml($caller_reference, $comment = null)
 	{
 		// Default, empty XML
-		$xml = simplexml_load_string(sprintf($this->base_xml,'CloudFrontOriginAccessIdentityConfig'));
+		$xml = simplexml_load_string(sprintf($this->base_xml, 'CloudFrontOriginAccessIdentityConfig'));
 
 		// CallerReference
 		$xml->addChild('CallerReference', $caller_reference);
@@ -777,7 +816,7 @@ class AmazonCloudFront extends CloudFusion
 
 		return $xml->asXML();
 	}
-	
+
 
 	/*%******************************************************************************************%*/
 	// DISTRIBUTIONS
@@ -819,17 +858,20 @@ class AmazonCloudFront extends CloudFusion
 	public function create_distribution($origin, $caller_reference, $opt = null)
 	{
 		$auth = array();
+
 		if (isset($opt['returnCurlHandle']))
 		{
 			$auth['returnCurlHandle'] = $opt['returnCurlHandle'];
 			unset($opt['returnCurlHandle']);
 		}
-		
+
 		if (isset($opt['Streaming']) && $opt['Streaming'] == (bool) true)
 		{
 			$auth['action'] = 'streaming-distribution';
 			unset($opt['Streaming']);
-		} else {
+		}
+		else
+		{
 			$auth['action'] = 'distribution';
 		}
 
@@ -874,11 +916,12 @@ class AmazonCloudFront extends CloudFusion
 		{
 			$opt['action'] = 'streaming-distribution';
 			unset($opt['Streaming']);
-		} 
-		else 
+		}
+		else
 		{
 			$opt['action'] = 'distribution';
 		}
+
 		return $this->authenticate(HTTP_GET, null, $opt, null, null);
 	}
 
@@ -916,12 +959,12 @@ class AmazonCloudFront extends CloudFusion
 		{
 			$opt['action'] = 'streaming-distribution';
 			unset($opt['Streaming']);
-		} 
-		else 
+		}
+		else
 		{
 			$opt['action'] = 'distribution';
 		}
-		
+
 		return $this->authenticate(HTTP_GET, '/' . $distribution_id, $opt, null, null);
 	}
 
@@ -960,15 +1003,15 @@ class AmazonCloudFront extends CloudFusion
 		{
 			$opt['action'] = 'streaming-distribution';
 			unset($opt['Streaming']);
-		} 
-		else 
+		}
+		else
 		{
 			$opt['action'] = 'distribution';
 		}
-		
+
 		return $this->authenticate(HTTP_DELETE, '/' . $distribution_id, $opt, null, $etag);
 	}
-	
+
 	/**
 	 * Method: create_origin_access_identity()
 	 * 	The response echoes the CloudFrontOriginAccessIdentity element and returns the newly created identity, an existing identity if the caller_reference is the same, or an error if caller_reference is the same but the rest of the content differs. You can have 100 origin access identities.
@@ -1032,11 +1075,12 @@ class AmazonCloudFront extends CloudFusion
 		{
 			$opt['action'] = 'streaming-distribution';
 			unset($opt['Streaming']);
-		} 
-		else 
+		}
+		else
 		{
 			$opt['action'] = 'distribution';
 		}
+
 		return $this->authenticate(HTTP_GET, '/' . $distribution_id . '/config', $opt, null, null);
 	}
 
@@ -1076,17 +1120,19 @@ class AmazonCloudFront extends CloudFusion
 		{
 			$opt['action'] = 'streaming-distribution';
 			unset($opt['Streaming']);
-		} 
-		else 
+		}
+		else
 		{
 			$opt['action'] = 'distribution';
 		}
-		
+
 		return $this->authenticate(HTTP_PUT, '/' . $distribution_id . '/config', $opt, $xml, $etag);
 	}
+
+
 	/*%******************************************************************************************%*/
 	// URLS
-	
+
 	/**
 	 * Method: get_private_object_url()
 	 * 	Generates a time-limited and/or query signed request for a private file with additional optional restrictions.
@@ -1097,13 +1143,13 @@ class AmazonCloudFront extends CloudFusion
 	 * Parameters:
 	 *	filename - _string_ (Required) The filename of the object. Query parameters can be included.
 	 *	conditions - _array_ (Required) Associative array of conditions to restrict access. Canned/custom policies are done for you depending on what you specify.
-	 * 
+	 *
 	 * Keys for the $conditions parameter:
 	 *	DateLessThan - _int_ (Required) Time in seconds until the URL expires.
 	 *	DateGreaterThan - _int_ (Optional) Time in seconds until the URL becomes valid.
 	 *	IpAddress - _string_ (Optional) IP address to restrict the access to.
-         *      DateLessThanExact - _int_ (Optional) Exact Unix timestamp of expiry time.
-         *      DateGreaterThanExact - _int_ (Optional) Exact Unix timestamp until URL becomes valid.
+	 * 	DateLessThanExact - _int_ (Optional) Exact Unix timestamp of expiry time.
+	 * 	DateGreaterThanExact - _int_ (Optional) Exact Unix timestamp until URL becomes valid.
 	 *
 	 * Returns:
 	 * 	_string_ The file URL with authentication parameters.
@@ -1122,10 +1168,14 @@ class AmazonCloudFront extends CloudFusion
 		$opt['filename'] = $filename;
 		$opt['conditions'] = $conditions;
 		$opt['private_key'] = $this->private_key;
-		
+
 		// Authenticate to S3
 		$data = $this->authenticate(HTTP_GET,null,$opt);
 
-		return $data['resource'] . ((strpos($opt['filename'],'?')===false)? '?' : '&') . ((isset($data['policy'])) ? 'Policy=' . $data['policy'] : 'Expires=' . $data['expires']) . '&Signature=' . $data['signature'] . '&Key-Pair-Id=' . $this->key_pair_id;
+		return $data['resource']
+			. ((strpos($opt['filename'],'?') === false) ? '?' : '&')
+			. ((isset($data['policy'])) ? 'Policy=' . $data['policy'] : 'Expires=' . $data['expires'])
+			. '&Signature=' . $data['signature']
+			. '&Key-Pair-Id=' . $this->key_pair_id;
 	}
 }

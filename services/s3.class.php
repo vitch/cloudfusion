@@ -4,7 +4,7 @@
  * 	Amazon Simple Storage Service (http://aws.amazon.com/s3)
  *
  * Version:
- * 	2010.01.26
+ * 	2010.03.26
  *
  * Copyright:
  * 	2006-2010 Ryan Parman, Foleeo, Inc., and contributors.
@@ -455,14 +455,16 @@ class AmazonS3 extends CloudFusion
 					$req->set_body($body);
 					$md5 = $this->util->hex_to_base64(md5($body));
 					$req->add_header('Content-MD5', $md5);
-				} elseif(isset($inputFilename) && !empty($inputFilename) && $method === 'create_object') {
-                                    $fileResourcePointer = fopen($inputFilename,'r');
-                                    $req->set_curlopts(array(
-                                        CURLOPT_PUT=>true,
-                                        CURLOPT_INFILE=>$fileResourcePointer,
-                                        CURLOPT_INFILESIZE=>filesize($inputFilename) //on 32 bit systems filesize cannot be greater than 2GB
-                                    ));
-                                }
+				}
+				elseif (isset($inputFilename) && !empty($inputFilename) && $method === 'create_object')
+				{
+					$fileResourcePointer = fopen($inputFilename, 'r');
+					$req->set_curlopts(array(
+						CURLOPT_PUT => true,
+						CURLOPT_INFILE => $fileResourcePointer,
+						CURLOPT_INFILESIZE => filesize($inputFilename) // on 32-bit systems filesize cannot be greater than 2GB
+					));
+				}
 
 				// Add any standard HTTP headers.
 				if ($headers)
@@ -513,7 +515,7 @@ class AmazonS3 extends CloudFusion
 
 			// Hash the AWS secret key and generate a signature for the request.
 			$signature = $this->util->hex_to_base64(hash_hmac('sha1', $stringToSign, $this->secret_key));
-			
+
 			// Are we getting a Query String Auth?
 			if ($qsa)
 			{
@@ -525,7 +527,7 @@ class AmazonS3 extends CloudFusion
 					'signature' => $signature,
 				);
 			}
-			
+
 			// Pass the developer key and signature
 			$req->add_header("Authorization", "AWS " . $this->key . ":" . $signature);
 
@@ -538,10 +540,11 @@ class AmazonS3 extends CloudFusion
 			// Send!
 			$req->send_request();
 
-                        //close file resource pointer if we were reading file
-                        if(isset($fileResourcePointer)) {
-                            fclose($fileResourcePointer);
-                        }
+			// Close file resource pointer if we were reading file
+			if (isset($fileResourcePointer))
+			{
+				fclose($fileResourcePointer);
+			}
 
 			// Prepare the response.
 			$headers = $req->get_response_header();
@@ -1110,7 +1113,7 @@ class AmazonS3 extends CloudFusion
  	 * Keys for the $opt parameter:
  	 * 	filename - _string_ (Required) The filename for the object.
 	 * 	body - _string_ (Required) The data to be stored in the object. Either this or inputFilename is required.
-         *      inputFilename - _string_ (Optional) Upload this file instead of the body data. Either this or body is required.
+	 * 	inputFilename - _string_ (Optional) Upload this file instead of the body data. Either this or body is required.
 	 * 	contentType - _string_ (Required) The type of content that is being sent in the body.
 	 * 	acl - _string_ (Optional) One of the following options: <S3_ACL_PRIVATE>, <S3_ACL_PUBLIC>, <S3_ACL_OPEN>, or <S3_ACL_AUTH_READ>. Defaults to <S3_ACL_PRIVATE>.
 	 * 	headers - _array_ (Optional) Standard HTTP headers to send along in the request.
@@ -1133,7 +1136,6 @@ class AmazonS3 extends CloudFusion
 		$opt['verb'] = HTTP_PUT;
 		$opt['method'] = 'create_object';
 		$opt['filename'] = $opt['filename'];
-                
 
 		// Authenticate to S3
 		return $this->authenticate($bucket, $opt);
@@ -1229,11 +1231,17 @@ class AmazonS3 extends CloudFusion
 	public function if_object_exists($bucket, $filename)
 	{
 		$header = $this->head_object($bucket, $filename);
-		if($header->isOK()) {
+
+		if ($header->isOK())
+		{
 			return true;
-		} elseif($header->status === 404) {
+		}
+		elseif ($header->status === 404)
+		{
 			return false;
-		} else {
+		}
+		else
+		{
 			return null;
 		}
 	}
@@ -2082,11 +2090,14 @@ class AmazonS3 extends CloudFusion
 
 				// Email Address or Canonical Id
 				default:
-					if(strpos($user['id'],'@')) {
+					if (strpos($user['id'],'@'))
+					{
 						$grantee->addAttribute('xsi:type', 'AmazonCustomerByEmail', 'http://www.w3.org/2001/XMLSchema-instance');
 						$grantee->addChild('EmailAddress', $user['id']);
-					} else {
-						//assume Canonical Id
+					}
+					else
+					{
+						// Assume Canonical Id
 						$grantee->addAttribute('xsi:type', 'CanonicalUser', 'http://www.w3.org/2001/XMLSchema-instance');
 						$grantee->addChild('ID', $user['id']);
 					}
@@ -2095,6 +2106,7 @@ class AmazonS3 extends CloudFusion
 
 			$grant->addChild('Permission', $user['permission']);
 		}
+
 		return $xml->asXML();
 	}
 
@@ -2116,7 +2128,7 @@ class AmazonS3 extends CloudFusion
 			'display_name' => (string) $id->body->Owner->DisplayName
 		);
 	}
-	
+
 	/**
 	 * Method: authorize_upload()
 	 * 	Authorizes a browser based upload.
@@ -2146,39 +2158,45 @@ class AmazonS3 extends CloudFusion
 	 *
 	 * Returns:
  	 * 	_array_ Base64 encoded policy and signature strings.
-	 * 
+	 *
 	 * See Also
 	 *	Browser-Based Uploads - http://docs.amazonwebservices.com/AmazonS3/latest/UsingHTTPPOST.html
 	 */
-	public function authorize_upload($conditions, $expires=3600)
+	public function authorize_upload($conditions, $expires = 3600)
 	{
 		if (isset($conditions['starts-with']))
 		{
-			foreach($conditions['starts-with'] as $prefix) {
-				$conditions_array[] = array('starts-with',$prefix[0],$prefix[1]);
+			foreach($conditions['starts-with'] as $prefix)
+			{
+				$conditions_array[] = array('starts-with', $prefix[0], $prefix[1]);
 			}
 			unset($conditions['starts-with']);
 		}
-		
-		if (isset($conditions['content-length-range'])) {
-			$conditions_array[] = array('content-length-range',$conditions['content-length-range'][0],$conditions['content-length-range'][1]);
+
+		if (isset($conditions['content-length-range']))
+		{
+			$conditions_array[] = array('content-length-range', $conditions['content-length-range'][0], $conditions['content-length-range'][1]);
 			unset($conditions['content-length-range']);
 		}
-		
+
 		foreach (array_keys($conditions) as $condition)
 		{
 			$conditions_array[] = array($condition=>$conditions[$condition]);
 		}
 
-		$policy = array('expiration'=>gmdate(DATE_FORMAT_ISO8601, time()+$expires),'conditions'=>$conditions_array);
+		$policy = array(
+			'expiration' => gmdate(DATE_FORMAT_ISO8601, time() + $expires),
+			'conditions' => $conditions_array
+		);
+
 		$policyToSign = $this->util->json_encode($policy);
-		
-		//base64 encode the policy
-		$policy_encoded = base64_encode($policyToSign); 
-		
+
+		// Base64 encode the policy
+		$policy_encoded = base64_encode($policyToSign);
+
 		// Hash the AWS secret key and generate a signature for the request.
 		$signature = base64_encode(hash_hmac('sha1', $policy_encoded, $this->secret_key, true));
-		
+
 		return array(
 			$policy_encoded,
 			$signature
