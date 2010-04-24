@@ -31,7 +31,7 @@ define('S3_DEFAULT_URL', 's3.amazonaws.com');
  * Constant: S3_LOCATION_US
  * 	Specify the US location.
  */
-define('S3_LOCATION_US', 'us');
+define('S3_LOCATION_US', 'us-west-1');
 
 /**
  * Constant: S3_LOCATION_EU
