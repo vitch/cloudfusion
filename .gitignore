@@ -1,4 +1,5 @@
 .DS_Store
+output
 config-rp.inc.php
 config-ws.inc.php
 config.inc.php
