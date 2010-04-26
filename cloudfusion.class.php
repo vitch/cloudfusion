@@ -362,9 +362,6 @@ class CloudFusion
 	 *
 	 * Returns:
 	 * 	void
- 	 *
- 	 * Examples:
- 	 * 	example::cloudfusion/adjust_offset.phpt:
 	 */
 	public function adjust_offset($seconds)
 	{
@@ -384,9 +381,6 @@ class CloudFusion
 	 *
 	 * Returns:
 	 * 	void
- 	 *
- 	 * Examples:
- 	 * 	example::cloudfusion/set_proxy.phpt:
 	 */
 	public function set_proxy($proxy)
 	{
@@ -406,9 +400,6 @@ class CloudFusion
 	 *
 	 * Returns:
 	 * 	void
- 	 *
- 	 * Examples:
- 	 * 	example::cloudfusion/set_hostname.phpt:
 	 */
 	public function set_hostname($hostname)
 	{
@@ -425,9 +416,6 @@ class CloudFusion
 	 *
 	 * Returns:
 	 * 	void
- 	 *
- 	 * Examples:
- 	 * 	example::cloudfusion/disable_ssl.phpt:
 	 */
 	public function disable_ssl()
 	{
@@ -451,9 +439,6 @@ class CloudFusion
 	 *
 	 * Returns:
 	 * 	void
- 	 *
- 	 * Examples:
- 	 * 	example::cloudfusion/set_utilities_class.phpt:
 	 */
 	function set_utilities_class($class = 'CFUtilities')
 	{
@@ -474,9 +459,6 @@ class CloudFusion
 	 *
 	 * Returns:
 	 * 	void
- 	 *
- 	 * Examples:
- 	 * 	example::cloudfusion/set_request_class.phpt:
 	 */
 	function set_request_class($class = 'RequestCore')
 	{
@@ -496,9 +478,6 @@ class CloudFusion
 	 *
 	 * Returns:
 	 * 	void
- 	 *
- 	 * Examples:
- 	 * 	example::cloudfusion/set_response_class.phpt:
 	 */
 	function set_response_class($class = 'ResponseCore')
 	{
@@ -654,14 +633,6 @@ class CloudFusion
 	 *
 	 * Returns:
 	 * 	<ResponseCore> object
- 	 *
- 	 * Examples:
- 	 * 	example::cloudfusion/cache_response_apc.phpt:
- 	 * 	example::cloudfusion/cache_response_file.phpt:
- 	 * 	example::cloudfusion/cache_response_memcached.phpt:
- 	 * 	example::cloudfusion/cache_response_pdo_sqlite.phpt:
- 	 * 	example::cloudfusion/cache_response_multi_apc.phpt:
- 	 * 	example::cloudfusion/cache_response_multi_file.phpt:
 	 */
 	public function cache_response($method, $location, $expires, $params = null, $gzip = true)
 	{
@@ -861,12 +832,6 @@ class CloudFusion
 	 *
 	 * Returns:
 	 * 	boolean TRUE if cached object exists and is successfully deleted, otherwise FALSE
-	 *
-	 * Examples:
-	 * 	example::cloudfusion/delete_cache_response_apc.phpt:
-	 * 	example::cloudfusion/delete_cache_response_file.phpt:
-	 * 	example::cloudfusion/delete_cache_response_memcached.phpt:
-	 * 	example::cloudfusion/delete_cache_response_pdo_sqlite.phpt:
 	 */
 	public function delete_cache_response($method, $location, $params = null)
 	{
