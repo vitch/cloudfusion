@@ -53,6 +53,7 @@ It's even better when it's unit tested. Bug fix patches should include matching 
 Documentation is equally as important as the code itself, and unit tests are actually used for code samples within the documentation. Doing your best will make my job easier. :)
 
 I definitely need help with:
+
 * Writing PHPT tests for the S3 class
 * Writing PHPT tests for the EC2 class
 * Supporting the new EC2-related services that have come out in the past few months
