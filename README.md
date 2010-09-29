@@ -16,7 +16,7 @@ CloudFusion does not make any changes to the AWS SDK for PHP -- we only add a fe
 
 ## Enabling CloudFusion Extensions
 
-If you're extending CloudFusion or the AWS SDK for PHP with a class prefixed with `Amazon` or `CF`, you can add them to the `services` or `utilities` directory, respectively.
+If you're extending CloudFusion or the AWS SDK for PHP with a class prefixed with `Amazon` or `CF`, you can add it to the `services` or `utilities` directory, respectively.
 
 For classes that don't follow this pattern (e.g., `GoogleStorage()`) you'll need to add them to the `extensions` directory, then explicitly enable the `AWS_ENABLE_EXTENSIONS` option in your configuration file. It is _not enabled by default_.
 
