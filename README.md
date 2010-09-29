@@ -29,21 +29,77 @@ The code that is part of the AWS SDK for PHP vs. CloudFusion is broken up like s
 
 ### AWS SDK for PHP
 
-* Amazon CloudFront
-* Amazon CloudWatch
-* Amazon EC2
-* Amazon IAM
-* Amazon S3
-* Amazon SimpleDB
-* Amazon SNS
-* Amazon SQS
+<table border="1" cellpadding="3">
+	<thead>
+		<tr>
+			<th>Service</th>
+			<th>Location</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>Amazon CloudFront</td>
+			<td><code>services/cloudfront.class.php</code></td>
+		</tr>
+		<tr>
+			<td>Amazon CloudWatch</td>
+			<td><code>services/cloudwatch.class.php</code></td>
+		</tr>
+		<tr>
+			<td>Amazon EC2</td>
+			<td><code>services/ec2.class.php</code></td>
+		</tr>
+		<tr>
+			<td>Amazon IAM</td>
+			<td><code>services/iam.class.php</code></td>
+		</tr>
+		<tr>
+			<td>Amazon S3</td>
+			<td><code>services/s3.class.php</code></td>
+		</tr>
+		<tr>
+			<td>Amazon SimpleDB</td>
+			<td><code>services/sdb.class.php</code></td>
+		</tr>
+		<tr>
+			<td>Amazon SNS</td>
+			<td><code>services/sns.class.php</code></td>
+		</tr>
+		<tr>
+			<td>Amazon SQS</td>
+			<td><code>services/sqs.class.php</code></td>
+		</tr>
+	</tbody>
+</table>
 
 ### CloudFusion
 
-* Amazon Product Advertising API
-* Google Storage
-* Eucalyptus
-* Walrus
+<table border="1" cellpadding="3">
+	<thead>
+		<tr>
+			<th>Service</th>
+			<th>Location</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>Amazon Product Advertising API</td>
+			<td><code>services/pas.class.php</code></td>
+		</tr>
+		<tr>
+			<td>Google Storage</td>
+			<td><code>extensions/googlestorage.class.php</code></td>
+		</tr>
+		<tr>
+			<td>Eucalyptus</td>
+			<td><code>extensions/eucalyptus.class.php</code></td>
+		</tr>
+		<tr>
+			<td>Walrus</td>
+			<td><code>extensions/walrus.class.php</code></td>
+		</tr>
+	</tbody>
+</table>
 
 
 ## Getting Help
