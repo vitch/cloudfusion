@@ -1,4 +1,5 @@
 .DS_Store
+<<<<<<< HEAD
 output
 config-rp.inc.php
 config-ws.inc.php
@@ -10,3 +11,16 @@ config.inc.php
 *.log
 *.out
 *.exp
+=======
+Config
+config.inc.php
+Rakefile
+Makefile
+eclipse
+build
+*.svn*
+*.CVS*
+*output*
+*_coverage_report*
+*cache*
+>>>>>>> f89d276c08923c32850e8d991a1f67c0cc2e13cb

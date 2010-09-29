@@ -1,6 +1,0 @@
-[submodule "lib/requestcore"]
-	path = lib/requestcore
-	url = git://github.com/cloudfusion/requestcore.git
-[submodule "lib/cachecore"]
-	path = lib/cachecore
-	url = git://github.com/cloudfusion/cachecore.git
