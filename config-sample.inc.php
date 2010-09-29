@@ -4,7 +4,7 @@
  * 	Stores your AWS account information. Add your account information, and then rename this file to 'config.inc.php'.
  *
  * Version:
- * 	2010.08.23
+ * 	2010.08.28
  *
  * License and Copyright:
  * 	See the included NOTICE.md file for more information.
@@ -68,3 +68,51 @@ define('AWS_CLOUDFRONT_PRIVATE_KEY_PEM', '');
  * 	Set the value to true to enable autoloading for classes not prefixed with "Amazon" or "CF". If enabled, load sdk.class.php last to avoid clobbering any other autoloaders.
  */
 define('AWS_ENABLE_EXTENSIONS', 'false');
+
+
+/*************************************************************************************/
+// AMAZON PRODUCT ADVERTISING API
+
+/**
+ * Constant: AWS_ASSOC_ID
+ * 	Amazon Associates ID. Used for crediting referrals via Amazon PAS. <http://affiliate-program.amazon.com/gp/associates/join/>
+ */
+define('AWS_ASSOC_ID', '');
+
+/**
+ * Constant: AWS_DEFAULT_LOCALE
+ * 	Locale that all PAS methods should default to. Can be overridden per-instance. Valid values are 'us', 'uk', 'ca', 'fr', 'de', or 'jp'.
+ */
+define('AWS_DEFAULT_LOCALE', '');
+
+
+/*************************************************************************************/
+// EUCALYPTUS COMMUNITY CLOUD
+
+/**
+ * Constant: EUCALYPTUS_KEY
+ * 	Eucalyptus Web Services Key. You'll need to enable AWS_ENABLE_EXTENSIONS to use this. <http://ecc.eucalyptus.com>
+ */
+define('EUCALYPTUS_KEY', '');
+
+/**
+ * Constant: EUCALYPTUS_SECRET_KEY
+ * 	Eucalyptus Web Services Secret Key. You'll need to enable AWS_ENABLE_EXTENSIONS to use this. <http://ecc.eucalyptus.com>
+ */
+define('EUCALYPTUS_SECRET_KEY', '');
+
+
+/*************************************************************************************/
+// GOOGLE STORAGE
+
+/**
+ * Constant: GOOGLE_KEY
+ * 	Google Storage Key. You'll need to enable AWS_ENABLE_EXTENSIONS to use this. <https://sandbox.google.com/storage/m/manage>
+ */
+define('GOOGLE_KEY', '');
+
+/**
+ * Constant: GOOGLE_SECRET_KEY
+ * 	Google Storage Secret Key. You'll need to enable AWS_ENABLE_EXTENSIONS to use this. <https://sandbox.google.com/storage/m/manage>
+ */
+define('GOOGLE_SECRET_KEY', '');
