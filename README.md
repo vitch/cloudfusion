@@ -1,4 +1,4 @@
-# CloudFusion
+# CloudFusion 3.1
 
 **CloudFusion is the AWS SDK for PHP, plus some other stuff.**
 
