@@ -27,51 +27,6 @@ For classes that don't follow this pattern (e.g., `GoogleStorage()`) you'll need
 
 The code that is part of the AWS SDK for PHP vs. CloudFusion is broken up like so.
 
-### AWS SDK for PHP
-
-<table border="1" cellpadding="3">
-	<thead>
-		<tr>
-			<th>Service</th>
-			<th>Location</th>
-		</tr>
-	</thead>
-	<tbody>
-		<tr>
-			<td>Amazon CloudFront</td>
-			<td><code>services/cloudfront.class.php</code></td>
-		</tr>
-		<tr>
-			<td>Amazon CloudWatch</td>
-			<td><code>services/cloudwatch.class.php</code></td>
-		</tr>
-		<tr>
-			<td>Amazon EC2</td>
-			<td><code>services/ec2.class.php</code></td>
-		</tr>
-		<tr>
-			<td>Amazon IAM</td>
-			<td><code>services/iam.class.php</code></td>
-		</tr>
-		<tr>
-			<td>Amazon S3</td>
-			<td><code>services/s3.class.php</code></td>
-		</tr>
-		<tr>
-			<td>Amazon SimpleDB</td>
-			<td><code>services/sdb.class.php</code></td>
-		</tr>
-		<tr>
-			<td>Amazon SNS</td>
-			<td><code>services/sns.class.php</code></td>
-		</tr>
-		<tr>
-			<td>Amazon SQS</td>
-			<td><code>services/sqs.class.php</code></td>
-		</tr>
-	</tbody>
-</table>
-
 ### CloudFusion
 
 <table border="1" cellpadding="3">
@@ -100,6 +55,8 @@ The code that is part of the AWS SDK for PHP vs. CloudFusion is broken up like s
 		</tr>
 	</tbody>
 </table>
+
+Everything else is part of the AWS SDK for PHP.
 
 
 ## Getting Help
