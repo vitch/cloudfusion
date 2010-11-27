@@ -4,7 +4,7 @@
  * 	Product Advertising Service (http://aws.amazon.com/associates)
  *
  * Version:
- * 	2010.08.16
+ * 	2010.11.26
  *
  * See Also:
  * 	[Amazon PAS](http://aws.amazon.com/associates)
@@ -211,6 +211,32 @@ class AmazonPAS extends CFRuntime
 		if ($this->hostname)
 		{
 			$hostname = $this->hostname;
+		}
+
+		// Use the caching flow to determine if we need to do a round-trip to the server.
+		if ($this->use_cache_flow)
+		{
+			// Generate an identifier specific to this particular set of arguments.
+			$cache_id = $this->key . '_' . get_class($this) . '_' . $action . '_' . sha1(serialize($method_arguments));
+
+			// Instantiate the appropriate caching object.
+			$this->cache_object = new $this->cache_class($cache_id, $this->cache_location, $this->cache_expires, $this->cache_compress);
+
+			if ($this->delete_cache)
+			{
+				$this->use_cache_flow = false;
+				$this->delete_cache = false;
+				return $this->cache_object->delete();
+			}
+
+			// Invoke the cache callback function to determine whether to pull data from the cache or make a fresh request.
+			$data = $this->cache_object->response_manager(array($this, 'cache_callback'), $method_arguments);
+
+			// Parse the XML body
+			$data = $this->parse_callback($data);
+
+			// End!
+			return $data;
 		}
 
 		$return_curl_handle = false;
