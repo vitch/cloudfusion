@@ -159,6 +159,11 @@ class AmazonPAS extends CFRuntime
 	 * Returns:
 	 * 	<CFResponse> object
 	 */
+	public function authenticate($action, $opt = null)
+	{
+		return $this->pas_authenticate($action, $opt);
+	}
+	
 	public function pas_authenticate($action, $opt = null)
 	{
 		// Was this set with set_locale()?
@@ -212,6 +217,8 @@ class AmazonPAS extends CFRuntime
 		{
 			$hostname = $this->hostname;
 		}
+		
+		$method_arguments = func_get_args();
 
 		// Use the caching flow to determine if we need to do a round-trip to the server.
 		if ($this->use_cache_flow)
