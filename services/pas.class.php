@@ -159,7 +159,7 @@ class AmazonPAS extends CFRuntime
 	 * Returns:
 	 * 	<CFResponse> object
 	 */
-	public function authenticate($action, $opt = null)
+	public function authenticate($action, $opt = null, $domain = null, $signature_version = 2, $redirects = 0)
 	{
 		return $this->pas_authenticate($action, $opt);
 	}
